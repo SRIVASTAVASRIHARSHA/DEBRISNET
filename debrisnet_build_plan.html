@@ -1,0 +1,415 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+.hdr{padding:1.25rem 1.5rem 0.75rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.hdr-title{font-size:20px;font-weight:500;color:var(--color-text-primary)}
+.hdr-sub{font-size:13px;color:var(--color-text-secondary);margin-top:3px}
+.tabs{display:flex;gap:4px;padding:0.75rem 1.5rem 0;border-bottom:0.5px solid var(--color-border-tertiary);flex-wrap:wrap}
+.tab{font-size:13px;padding:6px 14px;border-radius:var(--border-radius-md);border:0.5px solid transparent;cursor:pointer;color:var(--color-text-secondary);background:transparent;transition:all .15s;white-space:nowrap}
+.tab:hover{background:var(--color-background-secondary)}
+.tab.on{background:var(--color-background-secondary);border-color:var(--color-border-secondary);color:var(--color-text-primary);font-weight:500}
+.body{padding:1.25rem 1.5rem}
+.day-card{border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);margin-bottom:0.875rem;overflow:hidden}
+.day-header{display:flex;align-items:center;gap:12px;padding:0.875rem 1rem;cursor:pointer;background:var(--color-background-secondary)}
+.day-header:hover{background:var(--color-background-tertiary)}
+.day-pill{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;white-space:nowrap}
+.day-title{font-size:14px;font-weight:500;color:var(--color-text-primary);flex:1}
+.day-theme{font-size:12px;color:var(--color-text-secondary)}
+.chev{font-size:13px;color:var(--color-text-tertiary);transition:transform .2s;flex-shrink:0}
+.open .chev{transform:rotate(180deg)}
+.day-body{display:none;padding:0.875rem 1rem;border-top:0.5px solid var(--color-border-tertiary)}
+.open .day-body{display:block}
+.task-list{list-style:none;margin-bottom:0.75rem}
+.task-list li{font-size:13px;color:var(--color-text-secondary);padding:5px 0 5px 20px;position:relative;line-height:1.5;border-bottom:0.5px solid var(--color-border-tertiary)}
+.task-list li:last-child{border-bottom:none}
+.task-list li::before{content:"";position:absolute;left:6px;top:12px;width:6px;height:6px;border-radius:50%;background:var(--color-border-secondary)}
+.task-list li strong{color:var(--color-text-primary);font-weight:500}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.tg{font-size:11px;padding:2px 8px;border-radius:20px;border:0.5px solid var(--color-border-secondary);color:var(--color-text-secondary)}
+.deliverable{font-size:12px;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-top:8px;color:var(--color-text-secondary);line-height:1.5}
+.deliverable strong{color:var(--color-text-primary);font-weight:500}
+.prompt-box{background:var(--color-background-secondary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-lg);padding:1rem;font-size:13px;line-height:1.7;color:var(--color-text-secondary);white-space:pre-wrap;font-family:var(--font-mono);position:relative}
+.copy-btn{position:absolute;top:10px;right:10px;font-size:12px;padding:4px 12px;border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);cursor:pointer;color:var(--color-text-secondary)}
+.copy-btn:hover{background:var(--color-background-secondary)}
+.arch-section{margin-bottom:1.25rem}
+.arch-title{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px}
+.arch-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.arch-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px}
+.arch-card-title{font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px}
+.arch-card-sub{font-size:11px;color:var(--color-text-tertiary);line-height:1.5}
+.tip-box{border-left:3px solid;border-radius:0;padding:8px 12px;margin-bottom:8px;font-size:13px;color:var(--color-text-secondary);line-height:1.6}
+.tip-box.info{border-color:#378ADD;background:#E6F1FB20}
+.tip-box.warn{border-color:#EF9F27;background:#FAEEDA20}
+.tip-box.success{border-color:#1D9E75;background:#E1F5EE20}
+.prompt-section{margin-bottom:1.25rem}
+.prompt-label{font-size:12px;font-weight:500;color:var(--color-text-tertiary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+</style>
+
+<div class="hdr">
+  <div class="hdr-title">DebrisNet — complete 7-day build plan</div>
+  <div class="hdr-sub">Vibe-coding edition · Google Colab + IDX / Gemini · Solo build</div>
+</div>
+
+<div class="tabs">
+  <button class="tab on" onclick="sw('plan',this)">Day-by-day plan</button>
+  <button class="tab" onclick="sw('arch',this)">Architecture</button>
+  <button class="tab" onclick="sw('prompt',this)">Agent master prompt</button>
+  <button class="tab" onclick="sw('tips',this)">Vibe-coding tips</button>
+</div>
+
+<div id="pane-plan" class="body">
+
+<div class="tip-box info" style="margin-bottom:1rem">Each day has a clear theme, specific tasks, and an end-of-day deliverable. Click any day to expand. Estimated hours: 4-6 hrs/day.</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#E6F1FB;color:#0C447C">Day 1</span>
+    <span class="day-title">Project scaffolding + TLE data pipeline</span>
+    <span class="day-theme">Theme: Make real data flow</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>Setup project repo:</strong> Create GitHub repo "debrisnet". Init with README, .gitignore (Python + Node). Use Google IDX or Colab for backend dev.</li>
+      <li><strong>Backend skeleton:</strong> FastAPI app with a single /health endpoint. Folder structure: /backend (FastAPI), /frontend (React), /data, /scripts.</li>
+      <li><strong>TLE ingestion script:</strong> Fetch live TLE data from CelesTrak public API (https://celestrak.org/SOCRATES/) — no API key needed. Pull the "active satellites" catalog and the "debris" catalog separately. Store as .txt files in /data.</li>
+      <li><strong>Parse TLE into structured JSON:</strong> Use python-sgp4 library. For each TLE, extract: NORAD ID, name, epoch, inclination, eccentricity, RAAN, mean motion. Save as JSON array.</li>
+      <li><strong>FastAPI endpoint /api/satellites:</strong> Returns list of all parsed satellites with basic metadata. Test with curl.</li>
+      <li><strong>Vibe-code prompt:</strong> "Build a FastAPI endpoint that fetches TLE data from CelesTrak, parses it with python-sgp4 into a JSON array of satellite objects, and returns paginated results."</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 1 deliverable:</strong> FastAPI running locally, /api/satellites returns real TLE data for 500+ objects as JSON. You can see actual Starlink, debris, ISS data in your terminal.</div>
+    <div class="tag-row"><span class="tg">python-sgp4</span><span class="tg">FastAPI</span><span class="tg">CelesTrak API</span><span class="tg">Google IDX / Colab</span></div>
+  </div>
+</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#E1F5EE;color:#085041">Day 2</span>
+    <span class="day-title">Orbital propagation + conjunction detection</span>
+    <span class="day-theme">Theme: The physics engine</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>SGP4 propagation engine:</strong> For any satellite NORAD ID, propagate its position forward in 1-minute steps for 72 hours. Output: array of (timestamp, x, y, z) in ECI coordinates. Use python-sgp4's `propagate()` function.</li>
+      <li><strong>Convert ECI to lat/lon/alt:</strong> Use pymap3d or manual conversion to get geodetic coordinates from ECI. This gives you the ground track.</li>
+      <li><strong>Conjunction detection:</strong> For a given "primary" satellite, compute its position at each timestep. For ALL other objects, do the same. Calculate 3D distance at each timestep. Flag any pair where distance drops below threshold (e.g. 10km). This is the close approach detection.</li>
+      <li><strong>FastAPI endpoint /api/conjunctions/{norad_id}:</strong> Takes a satellite NORAD ID, runs conjunction analysis against the top 200 debris objects, returns list of close approach events with timestamps, miss distances, and secondary object names.</li>
+      <li><strong>Optimize with NumPy:</strong> Vectorize the distance calculations — naive loop is too slow. Use numpy broadcasting to compute all pairwise distances at once.</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 2 deliverable:</strong> POST /api/conjunctions/25544 (ISS NORAD ID) returns real conjunction events in JSON. You should see multiple close approaches — this is the moment it becomes real.</div>
+    <div class="tag-row"><span class="tg">python-sgp4</span><span class="tg">NumPy</span><span class="tg">pymap3d</span><span class="tg">ECI→geodetic</span></div>
+  </div>
+</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#EEEDFE;color:#3C3489">Day 3</span>
+    <span class="day-title">LLM risk narrative engine</span>
+    <span class="day-theme">Theme: Make the machine speak</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>Risk scoring function:</strong> Given a conjunction event (miss distance, combined object sizes, time to event), compute a risk score 0-100. Use a simple formula: risk = 100 * exp(-miss_distance/1000) * (1 + urgency_factor). Tune the constants.</li>
+      <li><strong>Gemini / Claude API integration:</strong> Set up Gemini 1.5 Flash (free tier via Google AI Studio) as the LLM backend. Install google-generativeai SDK.</li>
+      <li><strong>Structured prompt builder:</strong> Takes conjunction data JSON → builds a structured prompt that includes: satellite names, NORAD IDs, miss distance (km), time to closest approach, relative velocity, risk score. Asks LLM to produce: summary, severity level (LOW/MEDIUM/HIGH/CRITICAL), recommended action, confidence statement.</li>
+      <li><strong>FastAPI endpoint /api/risk-report/{norad_id}:</strong> Orchestrates everything — fetch TLE, propagate, find conjunctions, score, call LLM, return structured report JSON with llm_narrative field.</li>
+      <li><strong>Test with ISS:</strong> Generate a full risk report for the ISS. Read the narrative. If it sounds like a real mission briefing, you're done for the day.</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 3 deliverable:</strong> Full pipeline works end-to-end in the backend. One API call returns: list of conjunction events + LLM narrative + risk score. Paste the output into a tweet — it'll look incredible.</div>
+    <div class="tag-row"><span class="tg">Gemini 1.5 Flash</span><span class="tg">google-generativeai</span><span class="tg">Prompt engineering</span><span class="tg">Risk scoring</span></div>
+  </div>
+</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#FAEEDA;color:#633806">Day 4</span>
+    <span class="day-title">React frontend + search UI</span>
+    <span class="day-theme">Theme: First thing someone sees</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>Create React app:</strong> npx create-react-app debrisnet-ui or use Vite. Install: axios, recharts, three (for later).</li>
+      <li><strong>Search bar component:</strong> Autocomplete input that queries /api/satellites. User types satellite name or NORAD ID. Dropdown shows matching results with type badge (DEBRIS / PAYLOAD / ROCKET BODY).</li>
+      <li><strong>Risk report panel:</strong> On satellite selection, calls /api/risk-report/{id}. Shows: satellite name, orbit altitude, inclination, current risk score as a big number (color coded), and the LLM narrative text.</li>
+      <li><strong>Conjunction events table:</strong> List of close approach events sorted by miss distance. Columns: secondary object, time to event, miss distance (km), risk level badge. Color rows by severity.</li>
+      <li><strong>Loading states:</strong> Since propagation takes 2-3 seconds, add a proper loading skeleton with animated placeholder rows. Makes it feel professional.</li>
+      <li><strong>CORS setup:</strong> Configure FastAPI CORS to allow localhost:3000. Test full stack locally.</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 4 deliverable:</strong> Working full-stack app. Search for "ISS" → see risk report and conjunction table in the browser. This is the first moment it looks like a real product.</div>
+    <div class="tag-row"><span class="tg">React</span><span class="tg">Vite</span><span class="tg">Axios</span><span class="tg">Recharts</span><span class="tg">Tailwind CSS</span></div>
+  </div>
+</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#FAECE7;color:#712B13">Day 5</span>
+    <span class="day-title">3D orbital visualization</span>
+    <span class="day-theme">Theme: The wow factor</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>Three.js orbital globe:</strong> Render a 3D Earth sphere using Three.js. Use a free NASA Blue Marble texture (public domain). Add orbit controls for mouse drag rotation and zoom.</li>
+      <li><strong>Plot orbital track:</strong> For the selected satellite, plot its 72-hour ground track as a glowing line on the globe. Use the geodetic coordinates from Day 2.</li>
+      <li><strong>Plot conjunction objects:</strong> For each close approach object, draw its orbital path in a different color. Where paths come within range, add a pulsing warning sphere at the conjunction point.</li>
+      <li><strong>FastAPI endpoint /api/orbit-data/{norad_id}:</strong> Returns array of lat/lon/alt points for 72-hour propagation, formatted for Three.js (converted to 3D cartesian on globe surface).</li>
+      <li><strong>Color coding:</strong> Primary satellite = blue. Debris objects = gray. Conjunction warning zones = red pulsing sphere. Risk level drives sphere size.</li>
+      <li><strong>Vibe prompt for Three.js:</strong> "Build a Three.js component that renders a 3D Earth with a NASA Blue Marble texture, plots satellite orbital tracks as glowing lines, and shows pulsing red warning spheres at conjunction points."</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 5 deliverable:</strong> 3D globe in the browser showing real satellite orbits and collision warning points. This is the screenshot that goes viral.</div>
+    <div class="tag-row"><span class="tg">Three.js</span><span class="tg">NASA texture</span><span class="tg">WebGL</span><span class="tg">Orbit controls</span></div>
+  </div>
+</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#EAF3DE;color:#27500A">Day 6</span>
+    <span class="day-title">Deployment + polish</span>
+    <span class="day-theme">Theme: Make it live on the internet</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>Backend deployment — Railway.app or Render:</strong> Free tier supports Python FastAPI. Add requirements.txt, Procfile. Set GEMINI_API_KEY as environment variable. Push to GitHub → auto-deploy. Takes 10 mins.</li>
+      <li><strong>Frontend deployment — Vercel:</strong> Connect GitHub repo. Set REACT_APP_API_URL to your Railway backend URL. Deploy in 2 clicks.</li>
+      <li><strong>Add a featured satellite panel:</strong> On homepage load, automatically show risk reports for 5 famous satellites: ISS, Hubble, a Starlink, TIANGONG, a random debris object. Makes it feel alive without any user input.</li>
+      <li><strong>Add real-time refresh:</strong> Auto-refresh conjunction data every 5 minutes (satellite positions change). Add a "Last updated" timestamp.</li>
+      <li><strong>Error handling + edge cases:</strong> Handle TLE data not found, API timeouts, satellites in graveyard orbit. Show graceful error messages.</li>
+      <li><strong>Mobile responsive:</strong> Quick Tailwind responsive fixes so it works on phone. Many recruiters will check on mobile.</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 6 deliverable:</strong> Live URL. You can share it. debrisnet.vercel.app is live. This is the moment you post on LinkedIn.</div>
+    <div class="tag-row"><span class="tg">Railway.app</span><span class="tg">Vercel</span><span class="tg">GitHub Actions</span><span class="tg">Responsive CSS</span></div>
+  </div>
+</div>
+
+<div class="day-card">
+  <div class="day-header" onclick="tog(this.parentElement)">
+    <span class="day-pill" style="background:#F1EFE8;color:#2C2C2A">Day 7</span>
+    <span class="day-title">Demo, docs, LinkedIn blast</span>
+    <span class="day-theme">Theme: Make the world see it</span>
+    <span class="chev">▾</span>
+  </div>
+  <div class="day-body">
+    <ul class="task-list">
+      <li><strong>Record a 2-minute Loom demo:</strong> Search ISS → show conjunction table → show 3D globe → highlight a warning sphere → show LLM narrative. Script it. Record 3 takes, use the best one.</li>
+      <li><strong>README.md overhaul:</strong> Architecture diagram (ASCII or image), screenshots, live demo link, tech stack badges, how to run locally, "what this solves" section. Use the agent prompt below to vibe-code a great README.</li>
+      <li><strong>HuggingFace Space (optional bonus):</strong> Deploy a Gradio version of the risk report for extra discoverability. Paste NORAD ID → get narrative. Takes 1 hour.</li>
+      <li><strong>LinkedIn post:</strong> "I built a satellite collision detection system using real orbital data + AI in 7 days. It tracks 27,000+ objects and generates natural language risk reports. Here's how: [Loom link] [GitHub link] [Live demo]." Tag: SpaceX, ISRO, NASA, ESA.</li>
+      <li><strong>Tweet thread:</strong> 6-tweet thread. Tweet 1: the problem. Tweet 2: the data source. Tweet 3: how SGP4 works in 2 sentences. Tweet 4: the LLM narrative screenshot. Tweet 5: the 3D viz GIF. Tweet 6: the link.</li>
+      <li><strong>Email to 3 people:</strong> One professor in your CS dept. One space startup on LinkedIn. One open-source space project maintainer.</li>
+    </ul>
+    <div class="deliverable"><strong>End of Day 7 deliverable:</strong> GitHub repo with 50+ stars within 48 hours if you do the LinkedIn post right. A live project URL on your resume. A conversation starter for every interview for the next 3 years.</div>
+    <div class="tag-row"><span class="tg">Loom</span><span class="tg">README</span><span class="tg">LinkedIn</span><span class="tg">HuggingFace</span></div>
+  </div>
+</div>
+
+</div>
+
+<div id="pane-arch" class="body" style="display:none">
+<div class="arch-section">
+  <div class="arch-title">Data flow</div>
+  <div class="tip-box info">CelesTrak (free, no auth) → TLE Parser → SGP4 Propagator → Conjunction Engine → Risk Scorer → Gemini LLM → React UI + Three.js Globe</div>
+</div>
+<div class="arch-section">
+  <div class="arch-title">Backend modules</div>
+  <div class="arch-grid">
+    <div class="arch-card"><div class="arch-card-title">tle_fetcher.py</div><div class="arch-card-sub">Pulls from CelesTrak. Caches locally. Refreshes every 6hrs.</div></div>
+    <div class="arch-card"><div class="arch-card-title">propagator.py</div><div class="arch-card-sub">SGP4 engine. Returns ECI positions for any time window.</div></div>
+    <div class="arch-card"><div class="arch-card-title">conjunction.py</div><div class="arch-card-sub">Pairwise distance engine. NumPy vectorized. Returns close approach events.</div></div>
+    <div class="arch-card"><div class="arch-card-title">risk_scorer.py</div><div class="arch-card-sub">Computes 0-100 risk score from miss distance, velocity, object size.</div></div>
+    <div class="arch-card"><div class="arch-card-title">llm_narrator.py</div><div class="arch-card-sub">Gemini API call. Structured prompt → natural language risk report.</div></div>
+    <div class="arch-card"><div class="arch-card-title">main.py</div><div class="arch-card-sub">FastAPI app. All routes. CORS. Background TLE refresh task.</div></div>
+  </div>
+</div>
+<div class="arch-section">
+  <div class="arch-title">Frontend components</div>
+  <div class="arch-grid">
+    <div class="arch-card"><div class="arch-card-title">SearchBar.jsx</div><div class="arch-card-sub">Satellite name/NORAD autocomplete. Debounced API calls.</div></div>
+    <div class="arch-card"><div class="arch-card-title">RiskReport.jsx</div><div class="arch-card-sub">LLM narrative display. Risk score gauge. Severity badge.</div></div>
+    <div class="arch-card"><div class="arch-card-title">ConjunctionTable.jsx</div><div class="arch-card-sub">Sortable table of close approach events. Color-coded rows.</div></div>
+    <div class="arch-card"><div class="arch-card-title">OrbitalGlobe.jsx</div><div class="arch-card-sub">Three.js 3D Earth. Orbital tracks. Pulsing warning spheres.</div></div>
+    <div class="arch-card"><div class="arch-card-title">FeaturedSats.jsx</div><div class="arch-card-sub">Auto-loaded risk cards for ISS, Hubble, Starlink, Tiangong.</div></div>
+  </div>
+</div>
+<div class="arch-section">
+  <div class="arch-title">Key APIs and libraries</div>
+  <div class="arch-grid">
+    <div class="arch-card"><div class="arch-card-title">python-sgp4</div><div class="arch-card-sub">pip install sgp4. The standard SGP4/SDP4 orbital propagator.</div></div>
+    <div class="arch-card"><div class="arch-card-title">CelesTrak</div><div class="arch-card-sub">celestrak.org/SOCRATES/ — free live TLE catalog. No key needed.</div></div>
+    <div class="arch-card"><div class="arch-card-title">Gemini 1.5 Flash</div><div class="arch-card-sub">Free via Google AI Studio. 1M token context. Fast responses.</div></div>
+    <div class="arch-card"><div class="arch-card-title">Three.js</div><div class="arch-card-sub">npm install three. 3D Earth globe and orbit visualization.</div></div>
+    <div class="arch-card"><div class="arch-card-title">FastAPI + uvicorn</div><div class="arch-card-sub">Python async backend. Auto-generates OpenAPI docs at /docs.</div></div>
+    <div class="arch-card"><div class="arch-card-title">Railway.app</div><div class="arch-card-sub">Free Python hosting. GitHub deploy. No credit card for $5 free tier.</div></div>
+  </div>
+</div>
+</div>
+
+<div id="pane-prompt" class="body" style="display:none">
+<div class="tip-box success" style="margin-bottom:1rem">Copy this entire prompt and paste it at the START of any new conversation with any AI agent (Gemini, Claude, Cursor, Copilot, Windsurf). It front-loads everything the agent needs to understand DebrisNet deeply.</div>
+
+<div class="prompt-section">
+  <div class="prompt-label">Master agent context prompt</div>
+  <div class="prompt-box" id="master-prompt">
+You are an expert full-stack developer and aerospace software engineer helping me build DebrisNet — a satellite collision risk intelligence platform.
+
+PROJECT OVERVIEW
+DebrisNet is a web application that:
+1. Ingests live Two-Line Element (TLE) orbital data from CelesTrak for 27,000+ tracked space objects
+2. Uses the SGP4 orbital propagation model to compute satellite positions forward 72 hours
+3. Performs pairwise conjunction analysis to detect close approaches between satellites and debris
+4. Scores each conjunction event with a 0-100 risk score based on miss distance, relative velocity, and object characteristics
+5. Generates natural language risk reports using an LLM (Gemini 1.5 Flash / Claude API) that reads like a real mission controller briefing
+6. Renders a 3D interactive Earth globe (Three.js) showing orbital tracks and pulsing warning spheres at conjunction points
+
+KEY TECHNICAL FACTS
+- Backend: Python 3.11, FastAPI, uvicorn
+- Orbital mechanics: python-sgp4 library (SGP4/SDP4 model), pymap3d for coordinate conversion
+- Data source: CelesTrak public API at https://celestrak.org/SOCRATES/ — no authentication required
+- LLM: Google Gemini 1.5 Flash via google-generativeai SDK (or Anthropic Claude via anthropic SDK)
+- Frontend: React 18 + Vite, Three.js for 3D globe, Recharts for charts, Tailwind CSS
+- Deployment: Backend on Railway.app (free tier), Frontend on Vercel (free tier)
+- Coordinate systems: TLE uses ECI (Earth-Centered Inertial). Convert to ECEF then geodetic (lat/lon/alt) for globe plotting
+
+PROJECT FILE STRUCTURE
+debrisnet/
+  backend/
+    main.py          (FastAPI app, all routes, CORS, background tasks)
+    tle_fetcher.py   (CelesTrak download, local cache, refresh logic)
+    propagator.py    (SGP4 wrapper, ECI position arrays, coordinate conversion)
+    conjunction.py   (pairwise distance computation, close approach detection)
+    risk_scorer.py   (0-100 risk scoring formula)
+    llm_narrator.py  (Gemini/Claude API, structured prompt, report generation)
+    requirements.txt
+  frontend/
+    src/
+      components/
+        SearchBar.jsx       (satellite name/NORAD ID autocomplete)
+        RiskReport.jsx      (LLM narrative + risk score gauge + severity badge)
+        ConjunctionTable.jsx (sortable table of close approach events)
+        OrbitalGlobe.jsx    (Three.js 3D Earth, orbital tracks, warning spheres)
+        FeaturedSats.jsx    (auto-loaded cards for ISS, Hubble, Starlink, Tiangong)
+      App.jsx
+      main.jsx
+    package.json
+
+KEY API ENDPOINTS
+GET  /api/satellites         - paginated list of all tracked objects with metadata
+GET  /api/search?q={query}   - search satellites by name or NORAD ID
+GET  /api/orbit/{norad_id}   - 72-hour propagated positions as lat/lon/alt array
+GET  /api/conjunctions/{id}  - list of close approach events for a satellite
+GET  /api/risk-report/{id}   - full risk report with LLM narrative, risk score, conjunction list
+GET  /api/featured           - risk reports for ISS (25544), Hubble (20580), a Starlink, Tiangong
+
+CORE ALGORITHM (conjunction detection)
+1. For satellite A (primary), compute ECI position at t=0, t+1min, t+2min ... t+72hrs
+2. For each secondary object B in the debris catalog, do the same
+3. At each timestep, compute Euclidean distance between A and B in ECI space
+4. If min(distance) < THRESHOLD_KM (e.g. 10km), it's a conjunction event
+5. Record: time of closest approach, miss distance, relative velocity, object names/IDs
+6. Vectorize with NumPy broadcasting for speed — don't loop naively
+
+LLM PROMPT STRUCTURE
+The LLM receives structured data and returns a JSON object with:
+- summary: 2-3 sentence plain English description of the risk situation
+- severity: one of [LOW, MEDIUM, HIGH, CRITICAL]
+- recommended_action: what a mission controller should do
+- confidence: why we're confident or uncertain in this assessment
+- key_facts: bullet list of the most important numbers
+
+WHAT MAKES THIS PROJECT SPECIAL
+- It uses REAL live data from CelesTrak, not simulated positions
+- SGP4 is the actual algorithm used by NORAD and space agencies
+- The LLM layer produces mission-controller-grade narratives, not generic chatbot responses
+- The 3D Three.js globe with orbital tracks is visually striking and immediately understandable
+- This solves a real problem: there are 27,000+ tracked objects and growing, and conjunction analysis is currently done by specialists with expensive tools
+
+IMPORTANT CONSTRAINTS
+- All data sources are free and publicly available — no paid APIs, no government access required
+- No physical hardware needed — entirely software simulation
+- Backend must respond to /api/risk-report within 5 seconds (optimize SGP4 with caching)
+- Use environment variables for all API keys (GEMINI_API_KEY, never hardcode)
+- Handle TLE data freshness: TLEs older than 7 days should be re-fetched automatically
+
+When I ask you to build a specific file or feature, follow this file structure exactly, use the libraries listed above, and ensure all code is production-quality with proper error handling. Always ask if you're unsure about a technical choice rather than guessing.
+  </div>
+  <button class="copy-btn" onclick="copyPrompt('master-prompt',this)">Copy</button>
+</div>
+
+<div class="prompt-section" style="margin-top:1.25rem">
+  <div class="prompt-label">Quick task prompt (use after master prompt)</div>
+  <div class="prompt-box" id="task-prompt">
+[TASK]: Build the [FILE_NAME] module.
+
+Specifically:
+- [describe what this file should do]
+- [list the functions/endpoints it should expose]
+- [mention any specific library methods to use]
+
+Return complete, runnable code. Include imports. Add brief inline comments for non-obvious logic. Follow the file structure and conventions from the project context above.
+  </div>
+  <button class="copy-btn" onclick="copyPrompt('task-prompt',this)">Copy</button>
+</div>
+</div>
+
+<div id="pane-tips" class="body" style="display:none">
+<div class="tip-box success" style="margin-bottom:0.75rem"><strong>Golden rule of vibe coding:</strong> Always start every session with the master agent prompt. The agent has no memory between sessions — front-load the context every time.</div>
+
+<div class="arch-section">
+  <div class="arch-title">Google Antigravity (IDX) workflow</div>
+  <div class="tip-box info">Project IDX is Google's browser-based IDE — it can run a full FastAPI + React stack with no local setup. Use it as your primary dev environment until Day 6 deployment.</div>
+  <ul class="task-list" style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 10px 10px 30px;margin-bottom:0.75rem">
+    <li>Go to idx.dev → New workspace → Python template</li>
+    <li>Paste the master prompt into Gemini (the built-in AI in IDX)</li>
+    <li>Use the terminal inside IDX to pip install and run uvicorn</li>
+    <li>IDX gives you a public preview URL automatically — use this to test your API from anywhere</li>
+    <li>For frontend, open a second terminal and run the React dev server</li>
+  </ul>
+</div>
+
+<div class="arch-section">
+  <div class="arch-title">Colab workflow (alternative for heavy computation)</div>
+  <ul class="task-list" style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 10px 10px 30px;margin-bottom:0.75rem">
+    <li>Use Colab for testing the SGP4 propagation and conjunction engine in isolation</li>
+    <li>Run !pip install sgp4 pymap3d in the first cell</li>
+    <li>Colab T4 GPU speeds up NumPy matrix operations — useful for large constellation analysis</li>
+    <li>Use ngrok in Colab to expose your FastAPI as a public URL for testing with the React frontend</li>
+  </ul>
+</div>
+
+<div class="arch-section">
+  <div class="arch-title">Specific vibe-coding prompts per day</div>
+  <div class="arch-grid">
+    <div class="arch-card"><div class="arch-card-title">Day 1 prompt</div><div class="arch-card-sub">"Write tle_fetcher.py that downloads the active satellites and debris catalogs from CelesTrak, parses them with python-sgp4, and returns a list of satellite dicts with NORAD ID, name, epoch, inclination."</div></div>
+    <div class="arch-card"><div class="arch-card-title">Day 2 prompt</div><div class="arch-card-sub">"Write propagator.py with a function that takes a TLE string and time window, uses python-sgp4 to return a NumPy array of ECI positions at 1-minute intervals, then converts to lat/lon/alt."</div></div>
+    <div class="arch-card"><div class="arch-card-title">Day 3 prompt</div><div class="arch-card-sub">"Write llm_narrator.py that takes a conjunction event JSON and uses the Gemini API to return a structured risk report with severity level, recommended action, and plain English summary."</div></div>
+    <div class="arch-card"><div class="arch-card-title">Day 5 prompt</div><div class="arch-card-sub">"Build OrbitalGlobe.jsx — a Three.js component that renders a 3D Earth sphere with NASA Blue Marble texture, draws orbital tracks as colored lines, and shows pulsing red spheres at conjunction warning points."</div></div>
+  </div>
+</div>
+
+<div class="arch-section">
+  <div class="arch-title">When the agent gets confused</div>
+  <div class="tip-box warn">If an AI agent starts going off-track, say: "Stop. Re-read the project context. We are building DebrisNet — [paste the first 3 lines of the master prompt]. Now specifically: [your task]." This resets the agent's context.</div>
+</div>
+</div>
+
+<script>
+function sw(id,btn){
+  document.querySelectorAll('[id^="pane-"]').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('pane-'+id).style.display='block';
+  btn.classList.add('on');
+}
+function tog(card){
+  card.classList.toggle('open');
+}
+function copyPrompt(id,btn){
+  const text=document.getElementById(id).innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='Copied';
+    setTimeout(()=>btn.textContent='Copy',2000);
+  });
+}
+</script>
