@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import requests
+from orbit_service import get_orbit_prediction
 
 # 1. Create a FastAPI application instance
 app = FastAPI(
@@ -110,3 +111,11 @@ def get_satellites():
                 "message": "Failed to fetch satellite data from both CelesTrak and the backup mirror.",
                 "details": str(fallback_error)
             }
+
+@app.get("/api/orbit/{norad_id}")
+def get_orbit(norad_id: int):
+    """
+    Return predicted orbit positions for a satellite identified by NORAD ID.
+    """
+    return get_orbit_prediction(norad_id)
+
