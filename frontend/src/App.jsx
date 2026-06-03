@@ -1,0 +1,76 @@
+import React, { useEffect, useState } from 'react';
+import './App.css';
+import ModuleCard from './components/ModuleCard';
+import Navbar from './components/Navbar';
+import Hero from './components/Hero';
+import SystemCard from './components/SystemCard';
+import OrbitPanel from './components/OrbitPanel';
+import ConjunctionPanel from './components/ConjunctionPanel';
+import api from './services/api';
+
+function App() {
+  const [moduleStatus, setModuleStatus] = useState({
+    satelliteTracking: 'OFFLINE',
+    orbitPrediction: 'OFFLINE',
+    collisionIntelligence: 'OFFLINE',
+    aiMissionAnalyst: 'OFFLINE'
+  });
+
+  useEffect(() => {
+    // Fetch module statuses on component mount
+    const loadStatus = async () => {
+      try {
+        const statuses = await api.fetchModulesStatus();
+        setModuleStatus(statuses);
+      } catch (error) {
+        console.error("Failed to fetch module statuses:", error);
+      }
+    };
+    loadStatus();
+  }, []);
+
+  return (
+    <div className="app-container">
+      <Navbar />
+      <Hero />
+
+      {/* Mission Systems Section */}
+      <section id="mission" className="mission-section">
+        <h2 className="section-title">Mission Systems</h2>
+        <div className="systems-grid">
+          <SystemCard
+            title="Satellite Tracking"
+            description="Live orbital object monitoring using TLE data"
+          />
+          <SystemCard
+            title="Orbit Prediction"
+            description="SGP4 powered trajectory forecasting"
+          />
+          <SystemCard
+            title="Collision Intelligence"
+            description="Closest approach and risk assessment engine"
+          />
+          <SystemCard
+            title="AI Mission Analyst"
+            description="Human‑readable mission intelligence reports"
+          />
+        </div>
+      </section>
+
+      {/* Dashboard Preview Section */}
+      <section id="dashboard" className="dashboard-section">
+        <h2 className="section-title">System Status</h2>
+        <div className="modules-grid">
+          <ModuleCard title="Satellite Tracking" status={moduleStatus.satelliteTracking} />
+          <ModuleCard title="Orbit Prediction" status={moduleStatus.orbitPrediction} />
+          <ModuleCard title="Collision Intelligence" status={moduleStatus.collisionIntelligence} />
+          <ModuleCard title="AI Mission Analyst" status={moduleStatus.aiMissionAnalyst} />
+        </div>
+      </section>
+    <OrbitPanel />
+    <ConjunctionPanel />
+    </div>
+  );
+}
+
+export default App;
