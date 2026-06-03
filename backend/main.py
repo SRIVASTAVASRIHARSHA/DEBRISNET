@@ -1,6 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 import requests
 from orbit_service import get_orbit_prediction
+from conjunction_service import analyze_conjunction
 
 # 1. Create a FastAPI application instance
 app = FastAPI(
@@ -66,8 +67,17 @@ def parse_tle_to_satellites(tle_text):
         
         # Verify this is a valid TLE block before adding
         if line1.startswith("1 ") and line2.startswith("2 "):
+            try:
+                raw_id = line1.split()[1]
+                norad_id = int(''.join(filter(str.isdigit, raw_id)))
+            except Exception:
+                continue
+            
             satellites.append({
-                "name": name
+                "name": name,
+                "norad_id": norad_id,
+                "tle_line1": line1,
+                "tle_line2": line2
             })
             
     return satellites
@@ -118,4 +128,20 @@ def get_orbit(norad_id: int):
     Return predicted orbit positions for a satellite identified by NORAD ID.
     """
     return get_orbit_prediction(norad_id)
+
+@app.get("/api/conjunction/{satellite_a}/{satellite_b}")
+def get_conjunction(satellite_a: int, satellite_b: int):
+    """
+    Analyze the conjunction (closest approach) between two satellites.
+    """
+    try:
+        return analyze_conjunction(satellite_a, satellite_b)
+    except HTTPException:
+        # Re-raise HTTP exceptions from orbit_service
+        raise
+    except ValueError as e:
+        # e.g., mismatched list lengths, empty lists
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 

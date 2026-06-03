@@ -1,4 +1,5 @@
 import datetime
+from datetime import timezone
 import requests
 from sgp4.api import Satrec, jday
 from skyfield.api import load, EarthSatellite, wgs84
@@ -23,7 +24,7 @@ def _fetch_raw_tle() -> str:
         resp = requests.get(FALLBACK_URL, timeout=10)
         resp.raise_for_status()
         # Convert .dat to standard TLE format
-        from backend.satellites import format_dat_to_tle
+        from satellites import format_dat_to_tle
         return format_dat_to_tle(resp.text)
 
 def _find_tle_for_norad(tle_text: str, norad_id: int):
@@ -34,7 +35,9 @@ def _find_tle_for_norad(tle_text: str, norad_id: int):
         line1 = lines[i + 1]
         line2 = lines[i + 2]
         try:
-            if int(line1.split()[1]) == norad_id:
+            raw_id = line1.split()[1]
+            current_id = int(''.join(filter(str.isdigit, raw_id)))
+            if current_id == norad_id:
                 return name, line1, line2
         except Exception:
             continue
@@ -71,7 +74,7 @@ def get_orbit_prediction(norad_id: int):
         name, line1, line2 = _find_tle_for_norad(raw_tle, norad_id)
     except Exception as exc:
         raise HTTPException(status_code=404, detail=str(exc))
-    start = datetime.datetime.utcnow()
+    start = datetime.datetime.now(timezone.utc)
     try:
         positions = _propagate_positions(line1, line2, start, minutes=90)
     except Exception as exc:
