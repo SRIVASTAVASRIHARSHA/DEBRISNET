@@ -169,7 +169,7 @@ def analyze_conjunction(satellite_a_id: int, satellite_b_id: int) -> dict[str, A
     except Exception as e:
         risk_assessment = {"error": str(e)}
     
-    return {
+    conjunction_result = {
         "satellite_a": satellite_a_id,
         "satellite_b": satellite_b_id,
         "closest_approach": {
@@ -178,6 +178,24 @@ def analyze_conjunction(satellite_a_id: int, satellite_b_id: int) -> dict[str, A
         },
         "risk_assessment": risk_assessment
     }
+    
+    from mission_report_service import generate_mission_report
+    try:
+        mission_report = generate_mission_report(conjunction_result)
+    except Exception as e:
+        mission_report = {"error": f"Failed to generate report: {str(e)}"}
+        
+    conjunction_result["mission_report"] = mission_report
+    
+    from ai_analyst_service import generate_ai_analysis
+    try:
+        ai_analysis = generate_ai_analysis(conjunction_result)
+    except Exception as e:
+        ai_analysis = {"error": f"Failed to generate AI analysis: {str(e)}"}
+        
+    conjunction_result["ai_analysis"] = ai_analysis
+    
+    return conjunction_result
 
 
 if __name__ == "__main__":
