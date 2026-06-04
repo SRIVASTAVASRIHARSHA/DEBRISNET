@@ -48,13 +48,13 @@ const ConjunctionPanel = () => {
       {error && <p className="error-msg">{error}</p>}
       {result && (
         <div className="result">
-          <p><strong>Closest Approach:</strong> {result.closest_approach_distance || 'N/A'}</p>
-          <p><strong>Time:</strong> {result.time || 'N/A'}</p>
-          <p><strong>Risk Level:</strong> {result.risk_level || 'N/A'}</p>
-          <p><strong>Severity:</strong> {result.severity || 'N/A'}</p>
-          <p><strong>Recommendation:</strong> {result.recommendation || 'N/A'}</p>
-          <p><strong>Mission Report:</strong> {result.mission_report || 'N/A'}</p>
-          <p><strong>AI Analysis:</strong> {result.ai_analysis || 'N/A'}</p>
+          <p><strong>Closest Approach Distance:</strong> {result.closest_approach?.distance_km ? `${result.closest_approach.distance_km.toFixed(2)} km` : 'N/A'}</p>
+          <p><strong>Time:</strong> {result.closest_approach?.time || 'N/A'}</p>
+          <p><strong>Risk Level:</strong> {result.risk_assessment?.risk_level || 'N/A'}</p>
+          <p><strong>Severity:</strong> {result.risk_assessment?.severity || 'N/A'}</p>
+          <p><strong>Recommendation:</strong> {result.risk_assessment?.recommendation || 'N/A'}</p>
+          <p><strong>Mission Summary:</strong> {result.mission_report?.summary || 'N/A'}</p>
+          <p><strong>AI Analysis:</strong> {result.ai_analysis?.analysis || 'Analysis data unavailable'}</p>
         </div>
       )}
     </div>

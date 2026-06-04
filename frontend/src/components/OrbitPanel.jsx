@@ -40,14 +40,20 @@ const OrbitPanel = () => {
       {loading && <p className="status-msg">Analyzing...</p>}
       {error && <p className="error-msg">{error}</p>}
       {data && (
-        <div className="orbit-result">
-          <p><strong>Satellite ID:</strong> {data.satellite_id || noradId}</p>
-          <p><strong>Latitude:</strong> {data.latitude}</p>
-          <p><strong>Longitude:</strong> {data.longitude}</p>
-          <p><strong>Altitude:</strong> {data.altitude}</p>
-          {/* Additional fields can be displayed as needed */}
-        </div>
-      )}
+          <div className="orbit-result">
+            <p><strong>Satellite ID:</strong> {data.norad_id || noradId}</p>
+            {data.positions && data.positions.length > 0 ? (
+              <>
+                <p><strong>Latitude:</strong> {data.positions[0].latitude}</p>
+                <p><strong>Longitude:</strong> {data.positions[0].longitude}</p>
+                <p><strong>Altitude:</strong> {data.positions[0].altitude} km</p>
+                <p><strong>Timestamp:</strong> {data.positions[0].time}</p>
+              </>
+            ) : (
+              <p>No orbit positions available</p>
+            )}
+          </div>
+        )}
     </div>
   );
 };

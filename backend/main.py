@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 from orbit_service import get_orbit_prediction
 from conjunction_service import analyze_conjunction
@@ -8,6 +9,15 @@ app = FastAPI(
     title="DebrisNet API",
     description="Starter backend for the DebrisNet space debris tracking application.",
     version="1.0.0"
+)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # 2. Define the GET root endpoint
