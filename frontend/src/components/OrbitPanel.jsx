@@ -1,26 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getOrbitPrediction } from '../services/api';
 import './OrbitPanel.css';
 
-const OrbitPanel = () => {
+const OrbitPanel = ({ onPredict, trackedNoradId }) => {
   const [noradId, setNoradId] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const handlePredict = async () => {
-    if (!noradId) return;
+  // When SatelliteExplorer fires a selection, auto-populate and predict
+  useEffect(() => {
+    if (trackedNoradId) {
+      setNoradId(String(trackedNoradId));
+      // small delay so state settles before the fetch
+      setTimeout(() => triggerPredict(String(trackedNoradId)), 50);
+    }
+  }, [trackedNoradId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const triggerPredict = async (id) => {
+    if (!id) return;
     setLoading(true);
     setError(null);
     setData(null);
     try {
-      const result = await getOrbitPrediction(noradId);
+      const result = await getOrbitPrediction(id);
       setData(result);
+      if (onPredict && result.positions && result.positions.length > 0) {
+        const { latitude, longitude, altitude } = result.positions[0];
+        onPredict({ latitude, longitude, altitude });
+      }
     } catch (err) {
       setError('Failed to fetch orbit data');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePredict = async () => {
+    triggerPredict(noradId);
   };
 
   return (

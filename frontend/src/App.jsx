@@ -7,6 +7,8 @@ import SystemCard from './components/SystemCard';
 import OrbitPanel from './components/OrbitPanel';
 import ConjunctionPanel from './components/ConjunctionPanel';
 import api from './services/api';
+import EarthViewer from './components/EarthViewer';
+import SatelliteExplorer from './components/SatelliteExplorer';
 
 function App() {
   const [moduleStatus, setModuleStatus] = useState({
@@ -16,6 +18,24 @@ function App() {
     aiMissionAnalyst: 'OFFLINE'
   });
 
+  // Satellite position state (latitude, longitude, altitude)
+  const [satellitePos, setSatellitePos] = useState({
+    latitude: 0,
+    longitude: 0,
+    altitude: 0
+  });
+
+  // NORAD ID selected via SatelliteExplorer Track button
+  const [trackedNoradId, setTrackedNoradId] = useState('');
+
+  // Called when user clicks Track in SatelliteExplorer
+  const handleSelectSatellite = (satellite) => {
+    setTrackedNoradId(String(satellite.norad_id));
+    // Scroll to orbit panel so user sees the result
+    const el = document.getElementById('orbit-panel-section');
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
   useEffect(() => {
     // Fetch module statuses on component mount
     const loadStatus = async () => {
@@ -23,7 +43,7 @@ function App() {
         const statuses = await api.fetchModulesStatus();
         setModuleStatus(statuses);
       } catch (error) {
-        console.error("Failed to fetch module statuses:", error);
+        console.error('Failed to fetch module statuses:', error);
       }
     };
     loadStatus();
@@ -67,8 +87,22 @@ function App() {
           <ModuleCard title="AI Mission Analyst" status={moduleStatus.aiMissionAnalyst} />
         </div>
       </section>
-    <OrbitPanel />
-    <ConjunctionPanel />
+
+      {/* Pass satellite position to EarthViewer */}
+      <EarthViewer
+        latitude={satellitePos.latitude}
+        longitude={satellitePos.longitude}
+        altitude={satellitePos.altitude}
+      />
+
+      {/* Satellite Explorer – search by name, click Track to predict orbit */}
+      <SatelliteExplorer onSelectSatellite={handleSelectSatellite} />
+
+      {/* OrbitPanel notifies EarthViewer via callback; accepts trackedNoradId from explorer */}
+      <div id="orbit-panel-section">
+        <OrbitPanel onPredict={setSatellitePos} trackedNoradId={trackedNoradId} />
+      </div>
+      <ConjunctionPanel />
     </div>
   );
 }
