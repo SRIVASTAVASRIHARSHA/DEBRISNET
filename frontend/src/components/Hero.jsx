@@ -19,10 +19,16 @@ const Hero = () => {
         </p>
         
         <div className="hero-actions">
-          <button className="btn-primary glowing-border" onClick={() => handleScroll('dashboard')}>
+          <button 
+            className="btn-primary glowing-border" 
+            onClick={() => document.getElementById("dashboard")?.scrollIntoView({ behavior: "smooth" })}
+          >
             Launch Dashboard
           </button>
-          <button className="btn-secondary" onClick={() => handleScroll('analysis')}>
+          <button 
+            className="btn-secondary" 
+            onClick={() => document.getElementById("orbit")?.scrollIntoView({ behavior: "smooth" })}
+          >
             Analyze Orbit
           </button>
         </div>

@@ -195,6 +195,14 @@ def analyze_conjunction(satellite_a_id: int, satellite_b_id: int) -> dict[str, A
         
     conjunction_result["ai_analysis"] = ai_analysis
     
+    from avoidance_service import generate_avoidance_plan
+    try:
+        avoidance_plan = generate_avoidance_plan(conjunction_result)
+    except Exception as e:
+        avoidance_plan = {"error": f"Failed to generate avoidance plan: {str(e)}"}
+        
+    conjunction_result["avoidance_plan"] = avoidance_plan
+    
     return conjunction_result
 
 

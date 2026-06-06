@@ -9,10 +9,10 @@ const Navbar = () => {
           DebrisNet
         </div>
         <div className="navbar-links">
-          <a href="#mission" className="nav-link">Mission</a>
-          <a href="#tracking" className="nav-link">Tracking</a>
-          <a href="#conjunction" className="nav-link">Conjunction</a>
-          <a href="#analyst" className="nav-link">AI Analyst</a>
+          <button className="nav-link" onClick={() => document.getElementById("mission")?.scrollIntoView({behavior:"smooth"})}>Mission</button>
+          <button className="nav-link" onClick={() => document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"})}>Tracking</button>
+          <button className="nav-link" onClick={() => document.getElementById("conjunction")?.scrollIntoView({behavior:"smooth"})}>Conjunction</button>
+          <button className="nav-link" onClick={() => document.getElementById("ai")?.scrollIntoView({behavior:"smooth"})}>AI Analyst</button>
         </div>
       </div>
     </nav>

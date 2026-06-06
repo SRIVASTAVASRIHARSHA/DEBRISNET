@@ -35,7 +35,7 @@ function App() {
   const handleSelectSatellite = (satellite) => {
     setTrackedNoradId(String(satellite.norad_id));
     // Scroll to orbit panel so user sees the result
-    const el = document.getElementById('orbit-panel-section');
+    const el = document.getElementById('orbit');
     if (el) el.scrollIntoView({ behavior: 'smooth' });
   };
 
@@ -81,7 +81,7 @@ function App() {
       </section>
 
       {/* Dashboard Preview Section */}
-      <section id="dashboard" className="dashboard-section">
+      <section id="ai" className="dashboard-section">
         <h2 className="section-title">System Status</h2>
         <div className="modules-grid">
           <ModuleCard title="Satellite Tracking" status={moduleStatus.satelliteTracking} />
@@ -100,17 +100,22 @@ function App() {
       />
 
       {/* Satellite Explorer – search by name, click Track to predict orbit */}
-      <SatelliteExplorer onSelectSatellite={handleSelectSatellite} />
+      <div id="dashboard">
+        <SatelliteExplorer onSelectSatellite={handleSelectSatellite} />
 
-      {/* OrbitPanel notifies EarthViewer via callback; accepts trackedNoradId from explorer */}
-      <div id="orbit-panel-section">
-        <OrbitPanel
-          onPredict={setSatellitePos}
-          onOrbitPath={setOrbitPath}
-          trackedNoradId={trackedNoradId}
-        />
+        {/* OrbitPanel notifies EarthViewer via callback; accepts trackedNoradId from explorer */}
+        <div id="orbit">
+          <OrbitPanel
+            onPredict={setSatellitePos}
+            onOrbitPath={setOrbitPath}
+            trackedNoradId={trackedNoradId}
+          />
+        </div>
       </div>
-      <ConjunctionPanel />
+      
+      <div id="conjunction">
+        <ConjunctionPanel />
+      </div>
     </div>
   );
 }

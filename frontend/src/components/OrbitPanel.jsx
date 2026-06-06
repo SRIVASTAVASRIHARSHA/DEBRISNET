@@ -8,6 +8,31 @@ const OrbitPanel = ({ onPredict, onOrbitPath, trackedNoradId }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Loading messages for OrbitPanel
+  const orbitMessages = [
+    "🛰️ Acquiring orbital elements...",
+    "🌎 Propagating trajectory using SGP4...",
+    "📡 Computing orbital path..."
+  ];
+  const [orbitMsgIdx, setOrbitMsgIdx] = useState(0);
+  const [orbitLoadingMsg, setOrbitLoadingMsg] = useState(orbitMessages[0]);
+
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setOrbitMsgIdx(prev => {
+          const next = (prev + 1) % orbitMessages.length;
+          setOrbitLoadingMsg(orbitMessages[next]);
+          return next;
+        });
+      }, 2000);
+      return () => clearInterval(interval);
+    } else {
+      setOrbitMsgIdx(0);
+      setOrbitLoadingMsg(orbitMessages[0]);
+    }
+  }, [loading]);
+
   // When SatelliteExplorer fires a selection, auto-populate and predict
   useEffect(() => {
     if (trackedNoradId) {
@@ -24,6 +49,12 @@ const OrbitPanel = ({ onPredict, onOrbitPath, trackedNoradId }) => {
     setData(null);
     try {
       const result = await getOrbitPrediction(id);
+      // Handle case where API returns no positions (object not found)
+      if (!result || !result.positions || result.positions.length === 0) {
+        setError('Orbital object not found in public catalog.');
+        setLoading(false);
+        return;
+      }
       setData(result);
       if (result.positions && result.positions.length > 0) {
         // Send first position to satellite marker
@@ -44,6 +75,21 @@ const OrbitPanel = ({ onPredict, onOrbitPath, trackedNoradId }) => {
   };
 
   const handlePredict = async () => {
+    // Validation for NORAD ID input
+    if (!noradId) {
+      setError('Please enter NORAD catalog ID.');
+      return;
+    }
+    if (!/^\d+$/.test(noradId)) {
+      setError('Invalid NORAD ID. NORAD catalog numbers contain digits only.');
+      return;
+    }
+    if (noradId.length > 6) {
+      setError('NORAD catalog ID format is invalid.');
+      return;
+    }
+    // Clear previous errors before proceeding
+    setError(null);
     triggerPredict(noradId);
   };
 
@@ -61,8 +107,16 @@ const OrbitPanel = ({ onPredict, onOrbitPath, trackedNoradId }) => {
           Predict Orbit
         </button>
       </div>
-      {loading && <p className="status-msg">Analyzing...</p>}
-      {error && <p className="error-msg">{error}</p>}
+      {/* Empty state when no data */}
+      {!data && !loading && !error && (
+        <p className="empty-state" style={{ textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>
+          Awaiting Orbital Target<br />
+          Enter a NORAD catalog ID or select a satellite from the live catalog to begin SGP4 orbit propagation.
+        </p>
+      )}
+      {loading && (
+          <p className="status-msg">{orbitLoadingMsg}</p>
+        )}{error && <p className="error-msg">{error}</p>}
       {data && (
           <div className="orbit-result">
             <p><strong>Satellite ID:</strong> {data.norad_id || noradId}</p>

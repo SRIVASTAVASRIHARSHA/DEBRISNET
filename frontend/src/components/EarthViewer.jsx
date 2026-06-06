@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -203,7 +203,30 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath }
   const hasTrail = Array.isArray(orbitPath) && orbitPath.length >= 2;
 
   return (
-    <div style={{ width: '100%', height: '400px' }}>
+    <div style={{ width: '100%', height: '400px', position: 'relative' }}>
+      {/* Empty state overlay when no satellite tracking data */}
+      {latitude == null && longitude == null && altitude == null && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          background: 'rgba(0,0,0,0.6)',
+          color: '#fff',
+          textAlign: 'center',
+          padding: '1rem',
+          pointerEvents: 'none',
+          zIndex: 1
+        }}>
+          <h3 style={{ margin: 0, color: '#fff' }}>Tracking System Idle</h3>
+          <p style={{ margin: '0.5rem 0 0' }}>Search and track a satellite to initialize live orbital visualization.</p>
+        </div>
+      )}
       <Canvas camera={{ position: [0, 0, 6] }} style={{ background: '#000' }}>
         {/* Lighting */}
         <ambientLight intensity={0.4} />

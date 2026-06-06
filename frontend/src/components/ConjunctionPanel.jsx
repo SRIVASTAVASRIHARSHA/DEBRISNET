@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { jsPDF } from "jspdf";
 import { analyzeConjunction } from '../services/api';
 import './ConjunctionPanel.css';
@@ -145,8 +145,20 @@ const generatePDF = (result, satA, satB) => {
       });
   }
 
-  // 6. FINAL SYSTEM STATEMENT
-  addSectionHeader("6. FINAL SYSTEM STATEMENT");
+  // 6. COLLISION AVOIDANCE ADVISOR
+  if (result.avoidance_plan) {
+    addSectionHeader("6. COLLISION AVOIDANCE ADVISOR");
+    addKeyValue("Maneuver Required", result.avoidance_plan.maneuver_required ? "Yes" : "No");
+    addKeyValue("Recommended Action", result.avoidance_plan.recommended_action);
+    addKeyValue("Maneuver Type", result.avoidance_plan.maneuver_type);
+    addKeyValue("Estimated Delta-V", result.avoidance_plan.estimated_delta_v);
+    addKeyValue("Priority", result.avoidance_plan.priority);
+    y += 10;
+    addText(result.avoidance_plan.explanation, margin, false, 10, 0);
+  }
+
+  // 7. FINAL SYSTEM STATEMENT
+  addSectionHeader("7. FINAL SYSTEM STATEMENT");
   addText("This report was generated using deterministic orbital mechanics calculations combined with automated mission intelligence analysis.", margin, false, 10, 80);
 
   doc.save(`DebrisNet_Conjunction_Report_${satA}_${satB}.pdf`);
@@ -155,25 +167,82 @@ const generatePDF = (result, satA, satB) => {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const ConjunctionPanel = () => {
-  console.log("CONJUNCTION PANEL VERSION TEST 123");
+  // Loading messages for Collision Analysis
+  const conjMessages = [
+    "🛰️ Propagating satellite trajectories...",
+    "📡 Calculating closest approach...",
+    "🤖 Generating mission intelligence...",
+    "🚀 Preparing avoidance analysis..."
+  ];
+  const [conjMsgIdx, setConjMsgIdx] = useState(0);
+  const [conjLoadingMsg, setConjLoadingMsg] = useState(conjMessages[0]);
+
   const [satA, setSatA] = useState('');
-  const [satB, setSatB] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [result, setResult] = useState(null);
-  const [exporting, setExporting] = useState(false);
+const [satB, setSatB] = useState('');
+const [loading, setLoading] = useState(false);
+const [error, setError] = useState(null);
+const [result, setResult] = useState(null);
+const [exporting, setExporting] = useState(false);
+
+useEffect(() => {
+  if (loading) {
+    const interval = setInterval(() => {
+      setConjMsgIdx(prev => {
+        const next = (prev + 1) % conjMessages.length;
+        setConjLoadingMsg(conjMessages[next]);
+        return next;
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  } else {
+    setConjMsgIdx(0);
+    setConjLoadingMsg(conjMessages[0]);
+  }
+}, [loading]);
+
+  
 
   const handleAnalyze = async () => {
-    console.log("Starting conjunction request");
-    setLoading(true);
+    // Validation for Satellite A NORAD ID
+    if (!satA) {
+      setError('Please enter NORAD catalog ID.');
+      return;
+    }
+    if (!/^\d+$/.test(satA)) {
+      setError('Invalid NORAD ID. NORAD catalog numbers contain digits only.');
+      return;
+    }
+    if (satA.length > 6) {
+      setError('NORAD catalog ID format is invalid.');
+      return;
+    }
+    // Validation for Satellite B NORAD ID
+    if (!satB) {
+      setError('Please enter NORAD catalog ID.');
+      return;
+    }
+    if (!/^\d+$/.test(satB)) {
+      setError('Invalid NORAD ID. NORAD catalog numbers contain digits only.');
+      return;
+    }
+    if (satB.length > 6) {
+      setError('NORAD catalog ID format is invalid.');
+      return;
+    }
+    // Clear any previous errors before proceeding
     setError(null);
+    setLoading(true);
     setResult(null);
     try {
       const data = await analyzeConjunction(satA, satB);
-      console.log("Conjunction result:", data);
+      // If backend returns no data or missing expected fields
+      if (!data || !data.closest_approach) {
+        setError('Orbital object not found in public catalog.');
+        setLoading(false);
+        return;
+      }
       setResult(data);
     } catch (e) {
-      console.error(e);
       setError('Backend unavailable or request failed');
     } finally {
       setLoading(false);
@@ -190,6 +259,7 @@ const ConjunctionPanel = () => {
 
   return (
     <div className="conjunction-panel glass-panel">
+      {loading && (<p className="status-msg">{conjLoadingMsg}</p>)}
       <h2 className="panel-title">Collision Analysis</h2>
       <div className="inputs">
         <input
@@ -210,8 +280,17 @@ const ConjunctionPanel = () => {
           {loading ? 'Analyzing...' : 'Analyze Collision'}
         </button>
       </div>
+      {/* Empty state when no result */}
+      {!result && !loading && !error && (
+        <p className="empty-state" style={{ textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>
+          Awaiting Conjunction Assessment<br />
+          Select two orbital objects to calculate closest approach distance and collision probability.
+        </p>
+      )}  
 
-      {error && <p className="error-msg">{error}</p>}
+      {error && (<p className="error-msg">{error}</p>)}
+        
+
 
       {result && (
         <div className="result">
@@ -222,6 +301,18 @@ const ConjunctionPanel = () => {
           <p><strong>Recommendation:</strong> {result.risk_assessment?.recommendation || 'N/A'}</p>
           <p><strong>Mission Summary:</strong> {result.mission_report?.summary || 'N/A'}</p>
           <p><strong>AI Analysis:</strong> {result.ai_analysis?.analysis || 'Analysis data unavailable'}</p>
+
+          {result.avoidance_plan && (
+            <div className="avoidance-section" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderLeft: '4px solid #3b82f6' }}>
+              <h3 style={{ margin: '0 0 0.5rem 0', color: '#60a5fa' }}>Collision Avoidance Advisor</h3>
+              <p><strong>Maneuver Required:</strong> {result.avoidance_plan?.maneuver_required ? 'Yes' : 'No'}</p>
+              <p><strong>Recommended Action:</strong> {result.avoidance_plan?.recommended_action}</p>
+              <p><strong>Maneuver Type:</strong> {result.avoidance_plan?.maneuver_type}</p>
+              <p><strong>Estimated Delta-V:</strong> {result.avoidance_plan?.estimated_delta_v}</p>
+              <p><strong>Priority:</strong> {result.avoidance_plan?.priority}</p>
+              <p style={{ marginTop: '0.5rem' }}><strong>Explanation:</strong> {result.avoidance_plan?.explanation}</p>
+            </div>
+          )}
 
           <button
             type="button"

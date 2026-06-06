@@ -47,6 +47,10 @@
   color: #a1a1aa;
   transition: color 0.2s ease;
   font-weight: 400;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
 
 .nav-link:hover {
