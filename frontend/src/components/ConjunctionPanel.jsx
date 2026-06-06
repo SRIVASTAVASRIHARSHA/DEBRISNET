@@ -123,8 +123,26 @@ const generatePDF = (result, satA, satB) => {
   addSectionHeader("5. AI MISSION ANALYST ASSESSMENT");
   
   if (result.ai_analysis?.confidence != null) {
-      addKeyValue("Confidence Level", `${(Number(result.ai_analysis.confidence) * 100).toFixed(1)}%`);
+    const conf = result.ai_analysis.confidence;
+    // Handle string confidence levels like "HIGH" or numeric values
+    if (typeof conf === "string") {
+      const num = Number(conf);
+      if (!isNaN(num)) {
+        // Numeric string (e.g., "0.95") -> show as percentage score
+        addKeyValue("Confidence Score", `${(num * 100).toFixed(0)}%`);
+      } else {
+        // Non‑numeric string -> show as level label
+        addKeyValue("Confidence Level", conf);
+      }
+    } else if (typeof conf === "number") {
+      // Numeric confidence (0‑1) -> show as percentage score
+      addKeyValue("Confidence Score", `${(conf * 100).toFixed(0)}%`);
+    } else {
+      // Fallback for unexpected types
+      addKeyValue("Confidence Level", String(conf));
+    }
   }
+  
   y += 10;
   addText(result.ai_analysis?.analysis, margin, false, 10, 0);
   
