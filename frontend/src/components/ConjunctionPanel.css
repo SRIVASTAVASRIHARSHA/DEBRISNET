@@ -40,6 +40,9 @@
 
 /* ── Export button ── */
 .export-btn {
+  position: relative;
+  z-index: 10;
+  pointer-events: auto;
   display: inline-flex;
   align-items: center;
   margin-top: 1.25rem;
