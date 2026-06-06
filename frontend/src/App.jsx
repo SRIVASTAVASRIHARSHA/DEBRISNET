@@ -28,6 +28,9 @@ function App() {
   // NORAD ID selected via SatelliteExplorer Track button
   const [trackedNoradId, setTrackedNoradId] = useState('');
 
+  // Full orbit positions array for trail rendering
+  const [orbitPath, setOrbitPath] = useState([]);
+
   // Called when user clicks Track in SatelliteExplorer
   const handleSelectSatellite = (satellite) => {
     setTrackedNoradId(String(satellite.norad_id));
@@ -93,6 +96,7 @@ function App() {
         latitude={satellitePos.latitude}
         longitude={satellitePos.longitude}
         altitude={satellitePos.altitude}
+        orbitPath={orbitPath}
       />
 
       {/* Satellite Explorer – search by name, click Track to predict orbit */}
@@ -100,7 +104,11 @@ function App() {
 
       {/* OrbitPanel notifies EarthViewer via callback; accepts trackedNoradId from explorer */}
       <div id="orbit-panel-section">
-        <OrbitPanel onPredict={setSatellitePos} trackedNoradId={trackedNoradId} />
+        <OrbitPanel
+          onPredict={setSatellitePos}
+          onOrbitPath={setOrbitPath}
+          trackedNoradId={trackedNoradId}
+        />
       </div>
       <ConjunctionPanel />
     </div>

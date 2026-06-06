@@ -1,5 +1,5 @@
 import React, { useRef, useMemo } from 'react';
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -83,13 +83,79 @@ function Atmosphere() {
   );
 }
 
-// Orbit ring – bright and clear
+// Orbit ring – equatorial reference ring
 function OrbitRing() {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]}>
       <torusGeometry args={[2.5, 0.04, 8, 128]} />
       <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
     </mesh>
+  );
+}
+
+// OrbitTrail – renders the predicted orbit path as a glowing polyline
+function OrbitTrail({ positions }) {
+  // All geometry computed in one useMemo – no hooks after any return
+  const { coreGeo, glowGeo } = useMemo(() => {
+    if (!positions || positions.length < 2) return { coreGeo: null, glowGeo: null };
+
+    const coords = positions.map(({ latitude, longitude, altitude }) =>
+      latLonAltToVector3(latitude, longitude, altitude)
+    );
+
+    const flat = new Float32Array(coords.length * 3);
+    coords.forEach((v, i) => {
+      flat[i * 3]     = v.x;
+      flat[i * 3 + 1] = v.y;
+      flat[i * 3 + 2] = v.z;
+    });
+
+    const core = new THREE.BufferGeometry();
+    core.setAttribute('position', new THREE.BufferAttribute(flat, 3));
+
+    // Glow uses a separate geometry instance (same data)
+    const flatGlow = new Float32Array(flat);
+    const glow = new THREE.BufferGeometry();
+    glow.setAttribute('position', new THREE.BufferAttribute(flatGlow, 3));
+
+    return { coreGeo: core, glowGeo: glow };
+  }, [positions]);
+
+  if (!coreGeo) return null;
+
+  return (
+    <group>
+      {/* Outer glow – low opacity halo */}
+      <line geometry={glowGeo}>
+        <lineBasicMaterial
+          color="#00eaff"
+          transparent
+          opacity={0.18}
+          linewidth={1}
+          depthWrite={false}
+        />
+      </line>
+      {/* Core trail – bright cyan line */}
+      <line geometry={coreGeo}>
+        <lineBasicMaterial
+          color="#00eaff"
+          transparent
+          opacity={0.85}
+          linewidth={1}
+          depthWrite={false}
+        />
+      </line>
+      {/* Vertex dots at each predicted position */}
+      <points geometry={coreGeo}>
+        <pointsMaterial
+          color="#00eaff"
+          size={0.025}
+          transparent
+          opacity={0.6}
+          sizeAttenuation
+        />
+      </points>
+    </group>
   );
 }
 
@@ -125,13 +191,16 @@ function SatelliteModel({ position }) {
   );
 }
 
-export default function EarthViewer({ latitude, longitude, altitude }) {
+export default function EarthViewer({ latitude, longitude, altitude, orbitPath }) {
   const satellitePos = useMemo(() => {
     if (latitude != null && longitude != null && altitude != null) {
       return latLonAltToVector3(latitude, longitude, altitude);
     }
     return null;
   }, [latitude, longitude, altitude]);
+
+  // Only show trail when we have real data (>= 2 points)
+  const hasTrail = Array.isArray(orbitPath) && orbitPath.length >= 2;
 
   return (
     <div style={{ width: '100%', height: '400px' }}>
@@ -144,6 +213,8 @@ export default function EarthViewer({ latitude, longitude, altitude }) {
         <Clouds />
         <Atmosphere />
         <OrbitRing />
+        {/* Predicted orbit trail – only rendered after a satellite is selected */}
+        {hasTrail && <OrbitTrail positions={orbitPath} />}
         <SatelliteModel position={satellitePos} />
         {/* Controls and background */}
         <OrbitControls enableZoom />

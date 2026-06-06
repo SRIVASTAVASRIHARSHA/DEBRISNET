@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getOrbitPrediction } from '../services/api';
 import './OrbitPanel.css';
 
-const OrbitPanel = ({ onPredict, trackedNoradId }) => {
+const OrbitPanel = ({ onPredict, onOrbitPath, trackedNoradId }) => {
   const [noradId, setNoradId] = useState('');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,9 +25,16 @@ const OrbitPanel = ({ onPredict, trackedNoradId }) => {
     try {
       const result = await getOrbitPrediction(id);
       setData(result);
-      if (onPredict && result.positions && result.positions.length > 0) {
-        const { latitude, longitude, altitude } = result.positions[0];
-        onPredict({ latitude, longitude, altitude });
+      if (result.positions && result.positions.length > 0) {
+        // Send first position to satellite marker
+        if (onPredict) {
+          const { latitude, longitude, altitude } = result.positions[0];
+          onPredict({ latitude, longitude, altitude });
+        }
+        // Send full positions array for orbit trail rendering
+        if (onOrbitPath) {
+          onOrbitPath(result.positions);
+        }
       }
     } catch (err) {
       setError('Failed to fetch orbit data');
