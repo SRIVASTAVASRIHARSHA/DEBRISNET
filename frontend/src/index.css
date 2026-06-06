@@ -1,171 +1,443 @@
-/* ---- DebrisNet UI Foundation ---- */
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600&family=IBM+Plex+Mono:wght@400;600&family=Barlow+Condensed:wght@400;600&family=Inter:wght@200;300;400;500;600&display=swap');
+/* ============================================================
+   DEBRISNET — Blueprint Engineering Workstation
+   Phase 1.5 Visual Correction Pass
+   NASA Orbital Analysis Document Interface
+   ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
 :root {
-  /* Color Tokens */
-  --color-void: #000000;               /* Space Void Black */
-  --color-deep-navy: #0a0a23;           /* Deep Navy */
-  --color-operational-dark: #111827;   /* Operational Dark */
-  --color-console-dark: #1f2937;        /* Console Dark */
-  --color-orbital-cyan: #00e5ff;        /* Orbital Cyan */
-  --color-telemetry-green: #00ff9e;    /* Telemetry Green */
-  --color-caution-amber: #ffb400;      /* Caution Amber */
-  --color-alert-crimson: #ff3b3b;       /* Alert Crimson */
-  --color-data-violet: #a78bfa;         /* Data Violet */
-  --color-classified-white: #f5f5f5;    /* Classified White */
-  --color-ghost-text: #6b7280;         /* Ghost Text */
+  /* Backgrounds */
+  --bg-paper:          #EDEEE8;   /* Engineering paper — base canvas */
+  --bg-surface:        #F5F5F0;   /* Blueprint surface — slightly warmer */
+  --bg-panel:          #FAFAF8;   /* Technical panel — near white */
+  --bg-card:           #FFFFFF;   /* Document card — pure white */
+  --bg-navy:           #1E2D3D;   /* Deep Blueprint Navy */
+  --bg-ink:            #2C3E50;   /* Orbit Ink */
 
-  /* Font Tokens */
-  --font-display: 'Chakra Petch', sans-serif;   /* Large headings */
-  --font-mono: 'IBM Plex Mono', monospace;      /* Code / console */
-  --font-ui: 'Barlow Condensed', sans-serif;   /* UI controls */
-  --font-prose: 'Inter', sans-serif;            /* Body copy */
+  /* Text — strong technical ink, never faded */
+  --text-primary:   #111827;   /* Engineering Black — primary reading */
+  --text-secondary: #1E2D3D;   /* Deep Navy — secondary labels */
+  --text-tertiary:  #374151;   /* Technical Ink — body copy */
+  --text-muted:     #5A6978;   /* Reduced — only for metadata/captions */
+  --text-label:     #4A5568;   /* Label text — still readable */
+  --text-inverse:   #F5F5F0;   /* On dark surfaces */
+  --text-orange:    #B85D25;   /* Engineering orange — headings on white */
 
-  /* Misc Tokens */
-  --radius-sharp: 4px;        /* Aerospace sharp radius */
-  --radius-soft: 8px;        /* For cards */
+  /* Accent Colors */
+  --accent-orange: #C76D32;    /* Engineering Orange — primary action */
+  --accent-green:  #3D7A52;    /* NASA Safety Green */
+  --accent-amber:  #B8872A;    /* Warning Amber */
+  --accent-red:    #A83B2E;    /* Critical Red */
+  --accent-navy:   #1E2D3D;    /* Blueprint Navy accent */
+
+  /* Borders — visible blueprint lines, not invisible whispers */
+  --border-light:    #D0D4CB;   /* Soft divider */
+  --border-medium:   #A8ADA3;   /* Blueprint line */
+  --border-strong:   #7A8078;   /* Technical border */
+  --border-navy:     #1E2D3D;   /* Header border */
+  --border-orange:   #C76D32;   /* Accent border */
+
+  /* Typography */
+  --font-display: 'Chakra Petch', 'Barlow Condensed', sans-serif;
+  --font-mono:    'IBM Plex Mono', 'Courier New', monospace;
+  --font-ui:      'Barlow Condensed', sans-serif;
+  --font-prose:   'Inter', sans-serif;
+
+  /* Geometry */
+  --radius-sharp: 2px;
+  --radius-soft:  4px;
+  --radius-card:  5px;
+
+  /* Shadows — engineering document layers */
+  --shadow-panel: 0 1px 3px rgba(30, 45, 61, 0.10), 0 0 0 1px rgba(30, 45, 61, 0.07);
+  --shadow-card:  0 2px 8px rgba(30, 45, 61, 0.10), 0 0 0 1px rgba(30, 45, 61, 0.06);
+  --shadow-float: 0 4px 20px rgba(30, 45, 61, 0.14);
 }
 
-/* Global background – deep space with subtle coordinate grid */
-body {
+/* ============================================================
+   GLOBAL RESET
+   ============================================================ */
+*, *::before, *::after {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  font-family: var(--font-prose);
-  color: var(--color-classified-white);
-  background-color: var(--color-void);
-  background-image:
-    /* Star field */ radial-gradient(circle at 50% -20%, #0a0a23 0%, var(--color-void) 70%),
-    /* Grid overlay – vertical */ repeating-linear-gradient(90deg, transparent, transparent 49px, var(--color-ghost-text) 50px, var(--color-ghost-text) 51px),
-    /* Grid overlay – horizontal */ repeating-linear-gradient(0deg, transparent, transparent 49px, var(--color-ghost-text) 50px, var(--color-ghost-text) 51px);
-  background-size: cover, 50px 50px, 50px 50px;
-  background-attachment: fixed;
-  overflow-x: hidden;
 }
 
-/* Ensure the root container inherits the dark theme */
-#root, .app {
+/* ============================================================
+   BODY — Engineering Paper with Reduced Grid
+   ============================================================ */
+body {
+  min-height: 100vh;
+  font-family: var(--font-prose);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background-color: var(--bg-paper);
+
+  /* Subtle engineering grid — lighter than before, paper feeling not spreadsheet */
+  background-image:
+    /* Major grid every 100px — very faint */
+    linear-gradient(rgba(30, 45, 61, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 45, 61, 0.07) 1px, transparent 1px),
+    /* Minor grid every 25px — almost invisible */
+    linear-gradient(rgba(30, 45, 61, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(30, 45, 61, 0.03) 1px, transparent 1px);
+  background-size:
+    100px 100px,
+    100px 100px,
+    25px 25px,
+    25px 25px;
+  background-attachment: fixed;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
   min-height: 100vh;
   background: transparent;
 }
 
-/* Global noise overlay for subtle texture */
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image: url('data:image/svg+xml,%3Csvg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"%3E%3Cfilter id="noiseFilter"%3E%3CfeTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/%3E%3C/filter%3E%3Crect width="100%25" height="100%25" filter="url(%23noiseFilter)" opacity="0.05"/%3E%3C/svg%3E');
-  opacity: 0.4;
-  z-index: 999;
-}
-
-/* Global Element Reset */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-
-/* Typography */
+/* ============================================================
+   TYPOGRAPHY — Technical Ink, High Contrast
+   ============================================================ */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
-  color: var(--color-classified-white);
-  margin: 0;
+  color: var(--text-primary);     /* Strong engineering black */
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.15;
 }
 
-p, span, li, a {
+h1 { font-size: 2.4rem; color: var(--bg-navy); }
+h2 { font-size: 1.7rem; color: var(--bg-navy); }
+h3 { font-size: 1.25rem; color: var(--text-secondary); }
+h4 { font-size: 1rem;    color: var(--text-secondary); }
+
+p {
   font-family: var(--font-prose);
-  color: var(--color-classified-white);
+  color: var(--text-tertiary);   /* Strong readable body text */
+  line-height: 1.65;
+  font-size: 0.9rem;
 }
 
-/* Buttons */
+span, li {
+  color: var(--text-tertiary);
+}
+
+label {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-label);      /* Legible label grey, not faded */
+  display: block;
+  margin-bottom: 0.3rem;
+}
+
+/* Monospace data — telemetry numbers */
+code, .mono, [class*="telemetry"], [class*="data-value"] {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+a {
+  color: var(--accent-orange);
+  text-decoration: none;
+  font-weight: 500;
+}
+a:hover {
+  color: var(--bg-ink);
+  text-decoration: underline;
+}
+
+/* ============================================================
+   BUTTONS — Engineering Mission Style
+   ============================================================ */
 button {
   font-family: var(--font-ui);
-  background: var(--color-console-dark);
-  color: var(--color-classified-white);
-  border: 1px solid var(--color-orbital-cyan);
-  border-radius: var(--radius-sharp);
-  padding: 0.6rem 1.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-}
-button:hover, button:focus {
-  background: var(--color-deep-navy);
-  box-shadow: 0 0 8px var(--color-orbital-cyan);
-  outline: none;
-}
-
-/* Inputs */
-input, textarea, select {
-  font-family: var(--font-ui);
-  background: var(--color-operational-dark);
-  color: var(--color-classified-white);
-  border: 1px solid var(--color-ghost-text);
   border-radius: var(--radius-sharp);
-  padding: 0.5rem 0.8rem;
-  outline: none;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-input:focus, textarea:focus, select:focus {
-  border-color: var(--color-orbital-cyan);
-  box-shadow: 0 0 6px var(--color-orbital-cyan);
+  padding: 0.55rem 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.15s ease, border-color 0.15s ease,
+              box-shadow 0.15s ease, transform 0.1s ease;
+
+  /* Primary — Engineering Orange */
+  background: var(--accent-orange);
+  color: #FFFFFF;
+  border: 1.5px solid var(--accent-orange);
+  box-shadow: 0 1px 4px rgba(199, 109, 50, 0.28);
 }
 
-/* Cards – generic container */
+button:hover {
+  background: #A85A24;
+  border-color: #A85A24;
+  box-shadow: 0 3px 10px rgba(199, 109, 50, 0.35);
+  transform: translateY(-1px);
+}
+button:active  { transform: translateY(0); box-shadow: none; }
+button:focus   { outline: 2px solid var(--accent-orange); outline-offset: 2px; }
+
+/* Secondary — Blueprint outline */
+button.secondary {
+  background: var(--bg-card);
+  color: var(--bg-navy);
+  border: 1.5px solid var(--border-medium);
+  box-shadow: var(--shadow-panel);
+}
+button.secondary:hover {
+  border-color: var(--accent-orange);
+  color: var(--accent-orange);
+  background: rgba(199, 109, 50, 0.04);
+  box-shadow: 0 2px 6px rgba(199, 109, 50, 0.12);
+  transform: translateY(-1px);
+}
+
+/* Danger */
+button.danger {
+  background: var(--accent-red);
+  border-color: var(--accent-red);
+  color: #FFFFFF;
+}
+button.danger:hover { background: #8C2F24; border-color: #8C2F24; }
+
+/* Navy / dark action */
+button.navy {
+  background: var(--bg-navy);
+  border-color: var(--bg-navy);
+  color: var(--text-inverse);
+}
+button.navy:hover {
+  background: var(--bg-ink);
+  border-color: var(--bg-ink);
+  box-shadow: 0 3px 10px rgba(30, 45, 61, 0.3);
+}
+
+/* ============================================================
+   INPUTS — White Engineering Fields, CAD Appearance
+   ============================================================ */
+input,
+textarea,
+select {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-primary);        /* Strong readable text */
+  background: var(--bg-card);        /* Pure white field */
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-sharp);
+  padding: 0.5rem 0.75rem;
+  outline: none;
+  width: 100%;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: var(--border-strong);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 3px rgba(199, 109, 50, 0.13);
+}
+
+/* ============================================================
+   CARDS — NASA Engineering Document Panels
+   ============================================================ */
 .card {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid var(--color-ghost-text);
-  border-radius: var(--radius-soft);
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
-  transition: transform 0.2s ease;
+  background: var(--bg-card);         /* Pure white — document surface */
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+  position: relative;
+  transition: box-shadow 0.2s ease;
 }
 .card:hover {
-  transform: translateY(-2px);
+  box-shadow: var(--shadow-float);
 }
 
-/* Scrollbars – subtle cyan accent */
-::-webkit-scrollbar {
-  width: 8px;
+/* Blueprint corner accent marks */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 14px; height: 14px;
+  border-top: 2px solid var(--accent-orange);
+  border-left: 2px solid var(--accent-orange);
+  border-radius: var(--radius-sharp) 0 0 0;
 }
-::-webkit-scrollbar-track {
-  background: var(--color-operational-dark);
+.card::after {
+  content: '';
+  position: absolute;
+  bottom: -1px; right: -1px;
+  width: 14px; height: 14px;
+  border-bottom: 2px solid var(--border-medium);
+  border-right: 2px solid var(--border-medium);
+  border-radius: 0 0 var(--radius-sharp) 0;
 }
+
+/* ============================================================
+   GLASS / ENGINEERING PANELS — Light Surface, Blueprint Borders
+   ============================================================ */
+.section,
+.panel,
+.glass-panel,
+.engineering-panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-panel);
+  padding: 1.25rem;
+}
+
+/* Panel header label — technical annotation */
+.panel-label,
+.section-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-label);
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================
+   STATUS INDICATORS
+   ============================================================ */
+.status-safe    { color: var(--accent-green); font-family: var(--font-mono); font-weight: 600; }
+.status-warning { color: var(--accent-amber); font-family: var(--font-mono); font-weight: 600; }
+.status-critical{ color: var(--accent-red);   font-family: var(--font-mono); font-weight: 600; }
+
+.status-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.status-dot.green  { background: var(--accent-green); }
+.status-dot.amber  { background: var(--accent-amber); }
+.status-dot.red    { background: var(--accent-red); }
+.status-dot.orange { background: var(--accent-orange); }
+
+/* ============================================================
+   SCROLLBARS
+   ============================================================ */
+::-webkit-scrollbar       { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-paper); }
 ::-webkit-scrollbar-thumb {
-  background: var(--color-orbital-cyan);
-  border-radius: var(--radius-sharp);
+  background: var(--border-medium);
+  border-radius: 1px;
+  border: 2px solid var(--bg-paper);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--bg-ink); }
+
+/* ============================================================
+   TECHNICAL BADGE — annotation labels
+   ============================================================ */
+.tech-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 1px;
+  border: 1px solid currentColor;
+}
+.tech-badge.orange { color: var(--accent-orange); background: rgba(199, 109, 50, 0.08); }
+.tech-badge.green  { color: var(--accent-green);  background: rgba(61, 122, 82, 0.08); }
+.tech-badge.amber  { color: var(--accent-amber);  background: rgba(184, 135, 42, 0.08); }
+.tech-badge.red    { color: var(--accent-red);    background: rgba(168, 59, 46, 0.08); }
+.tech-badge.navy   { color: var(--bg-navy);       background: rgba(30, 45, 61, 0.08); }
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.text-mono    { font-family: var(--font-mono) !important; }
+.text-display { font-family: var(--font-display) !important; text-transform: uppercase; }
+.text-ui      { font-family: var(--font-ui) !important; text-transform: uppercase; letter-spacing: 0.06em; }
+
+.text-orange { color: var(--accent-orange) !important; }
+.text-green  { color: var(--accent-green)  !important; }
+.text-amber  { color: var(--accent-amber)  !important; }
+.text-red    { color: var(--accent-red)    !important; }
+.text-navy   { color: var(--bg-navy)       !important; }
+.text-muted  { color: var(--text-muted)    !important; }
+.text-strong { color: var(--text-primary)  !important; font-weight: 600; }
+
+.bg-navy  { background: var(--bg-navy)  !important; color: var(--text-inverse) !important; }
+.bg-card  { background: var(--bg-card)  !important; }
+.bg-paper { background: var(--bg-paper) !important; }
+
+/* Blueprint divider with annotation */
+.blueprint-divider {
+  border: none;
+  border-top: 1px solid var(--border-light);
+  margin: 1.25rem 0;
+  position: relative;
+}
+.blueprint-divider[data-label]::after {
+  content: attr(data-label);
+  position: absolute;
+  top: -0.55rem; left: 1rem;
+  background: var(--bg-paper);
+  padding: 0 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.63rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
-/* Animations */
-@keyframes pulse {
-  0% { opacity: 0.7; }
-  50% { opacity: 1; }
-  100% { opacity: 0.7; }
-}
-@keyframes scan-line {
-  0% { background-position: 0% 0%; }
-  100% { background-position: 100% 0%; }
-}
-@keyframes glow {
-  from { box-shadow: 0 0 4px var(--color-orbital-cyan); }
-  to { box-shadow: 0 0 12px var(--color-orbital-cyan); }
-}
+.metallic-border  { border-color: var(--accent-orange) !important; }
+.highlight-amber  { color: var(--accent-amber) !important; }
+
+/* ============================================================
+   ANIMATIONS — Restrained, Engineering-appropriate
+   ============================================================ */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Utility classes */
-.status-pulse {
-  animation: pulse 2s ease-in-out infinite;
+@keyframes pulse-indicator {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
-.scan-line {
-  background: repeating-linear-gradient(90deg, transparent, transparent 2px, var(--color-orbital-cyan) 3px, var(--color-orbital-cyan) 4px);
-  animation: scan-line 4s linear infinite;
-}
-.glow {
-  animation: glow 1.5s ease-in-out infinite alternate;
-}
-.fade-in {
-  animation: fadeIn 0.6s ease-out forwards;
-}
+
+.fade-in      { animation: fadeIn 0.3s ease-out forwards; }
+.status-pulse { animation: pulse-indicator 2s ease-in-out infinite; }
