@@ -1,35 +1,62 @@
+/* ============================================================
+   SystemCard.css — Blueprint Engineering Theme
+   ============================================================ */
+
 .system-card {
-  padding: 2rem;
-  border-radius: 8px;
+  padding: 1.75rem;
+  border-radius: 5px;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s ease, background 0.3s ease;
+  background: #FFFFFF;                        /* White document card */
+  border: 1px solid #D0D4CB;
+  box-shadow: 0 2px 8px rgba(30, 45, 61, 0.08);
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   height: 100%;
 }
 
-.system-card:hover {
-  transform: translateY(-5px);
-  background: rgba(25, 25, 25, 0.8);
+/* Blueprint corner accent */
+.system-card::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: -1px;
+  width: 14px; height: 14px;
+  border-top: 2px solid var(--accent-orange);
+  border-left: 2px solid var(--accent-orange);
+  border-radius: 2px 0 0 0;
 }
 
+.system-card:hover {
+  transform: translateY(-4px);
+  border-color: #A8ADA3;
+  box-shadow: 0 6px 20px rgba(30, 45, 61, 0.13);
+}
+
+/* Icon — using engineering orange as mask color */
 .system-card-icon {
-  width: 40px;
-  height: 40px;
-  margin-bottom: 1.5rem;
-  background: linear-gradient(135deg, rgba(255,255,255,0.8), rgba(255,255,255,0.2));
+  width: 36px;
+  height: 36px;
+  margin-bottom: 1.25rem;
+  background: var(--accent-orange);
   -webkit-mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>') no-repeat center;
   mask: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>') no-repeat center;
 }
 
+/* Card title — strong navy */
 .system-card-title {
-  font-size: 1.25rem;
-  font-weight: 500;
-  margin-bottom: 1rem;
-  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  color: #1E2D3D;                             /* Deep Blueprint Navy */
 }
 
+/* Card description — readable body copy */
 .system-card-desc {
+  font-family: var(--font-prose);
   font-size: 0.875rem;
-  color: #a1a1aa;
-  line-height: 1.6;
+  color: #374151;                             /* Technical ink */
+  line-height: 1.65;
 }

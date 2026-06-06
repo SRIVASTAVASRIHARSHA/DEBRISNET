@@ -1,18 +1,27 @@
+/* ============================================================
+   SatelliteExplorer.css — Blueprint Engineering Theme
+   ============================================================ */
+
 .satellite-explorer {
   padding: 2rem;
   margin: 2rem 0;
-  background: rgba(10, 10, 10, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  background: #FFFFFF;                        /* White document surface */
+  border: 1px solid #D0D4CB;
+  border-left: 3px solid var(--accent-orange);
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(30, 45, 61, 0.08);
 }
 
+/* Subtitle — readable secondary text */
 .explorer-subtitle {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  color: #4A5568;                             /* Legible label — not faded */
+  font-size: 0.85rem;
   margin: -0.5rem 0 1.25rem;
+  letter-spacing: 0.04em;
 }
 
-/* Search row */
+/* ── Search Row ── */
 .explorer-search-row {
   display: flex;
   align-items: center;
@@ -23,93 +32,115 @@
 .explorer-search-input {
   flex: 1;
   padding: 0.55rem 0.75rem;
-  background: #111;
-  border: 1px solid #333;
-  color: #fff;
-  font-size: 0.95rem;
+  background: #FFFFFF;                        /* White field */
+  border: 1.5px solid #A8ADA3;
+  border-radius: 2px;
+  color: #111827;                             /* Strong readable text */
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.explorer-search-input::placeholder {
+  color: #8A8F98;
+  font-style: italic;
 }
 
 .explorer-search-input:focus {
-  border-color: rgba(255, 255, 255, 0.4);
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 3px rgba(199, 109, 50, 0.12);
 }
 
 .explorer-clear-btn {
-  background: transparent;
-  border: 1px solid #444;
-  color: #aaa;
-  padding: 0.45rem 0.7rem;
+  background: #FFFFFF;
+  border: 1.5px solid #A8ADA3;
+  color: #374151;                             /* Readable — not invisible grey */
+  padding: 0.45rem 0.75rem;
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: color 0.2s, border-color 0.2s;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-radius: 2px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+  box-shadow: none;
 }
 
 .explorer-clear-btn:hover {
-  color: #fff;
-  border-color: #777;
+  color: var(--accent-orange);
+  border-color: var(--accent-orange);
+  background: rgba(199, 109, 50, 0.04);
+  box-shadow: none;
+  transform: none;
 }
 
-/* Status / info text */
+/* ── Status / Info Text ── */
 .explorer-status-msg {
-  color: #0f0;
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  color: #3D7A52;                             /* NASA Green — semantic */
+  font-size: 0.875rem;
+  font-weight: 600;
   margin: 0.5rem 0;
 }
 
 .explorer-error-msg {
-  color: #f44;
-  font-size: 0.9rem;
+  font-family: var(--font-mono);
+  color: #A83B2E;                             /* Critical Red — semantic */
+  font-size: 0.875rem;
+  font-weight: 600;
   margin: 0.5rem 0;
 }
 
 .explorer-count {
-  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-mono);
+  color: #4A5568;                             /* Readable count label */
   font-size: 0.8rem;
   margin-bottom: 0.75rem;
 }
 
 .explorer-empty-msg {
-  color: rgba(255, 255, 255, 0.4);
+  font-family: var(--font-prose);
+  color: #5A6978;
   font-size: 0.9rem;
   padding: 1rem 0;
 }
 
-/* Results list */
+/* ── Results List ── */
 .explorer-results {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
   max-height: 420px;
   overflow-y: auto;
   padding-right: 4px;
 }
 
-.explorer-results::-webkit-scrollbar {
-  width: 4px;
-}
-.explorer-results::-webkit-scrollbar-track {
-  background: transparent;
-}
+.explorer-results::-webkit-scrollbar { width: 5px; }
+.explorer-results::-webkit-scrollbar-track { background: #F5F5F0; }
 .explorer-results::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 2px;
+  background: #A8ADA3;
+  border-radius: 1px;
 }
 
-/* Individual result card */
+/* ── Individual Result Card ── */
 .explorer-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.6rem 0.9rem;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: background 0.15s, border-color 0.15s;
+  background: #FAFAF8;                        /* Warm near-white */
+  border: 1px solid #D0D4CB;
+  border-radius: 3px;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  cursor: pointer;
 }
 
 .explorer-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  background: #FFFFFF;
+  border-color: var(--accent-orange);
+  box-shadow: 0 2px 6px rgba(199, 109, 50, 0.10);
 }
 
 .explorer-card-info {
@@ -118,31 +149,44 @@
   gap: 0.15rem;
 }
 
+/* Satellite name — strong, readable */
 .explorer-sat-name {
-  color: #fff;
+  font-family: var(--font-ui);
+  color: #1E2D3D;                             /* Deep navy — primary */
   font-size: 0.9rem;
-  font-weight: 500;
-}
-
-.explorer-norad-id {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.75rem;
-  font-family: monospace;
-}
-
-/* Track button */
-.explorer-track-btn {
-  background: #fff;
-  color: #000;
-  border: none;
-  padding: 0.35rem 0.85rem;
-  font-size: 0.8rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* NORAD ID — mono, secondary */
+.explorer-norad-id {
+  font-family: var(--font-mono);
+  color: #4A5568;                             /* Readable secondary */
+  font-size: 0.75rem;
+}
+
+/* ── Track Button ── */
+.explorer-track-btn {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--accent-orange);
+  color: #FFFFFF;
+  border: 1.5px solid var(--accent-orange);
+  padding: 0.35rem 0.85rem;
+  border-radius: 2px;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
   white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(199, 109, 50, 0.2);
 }
 
 .explorer-track-btn:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: #A85A24;
+  border-color: #A85A24;
+  box-shadow: 0 2px 6px rgba(199, 109, 50, 0.3);
+  transform: translateY(-1px);
 }

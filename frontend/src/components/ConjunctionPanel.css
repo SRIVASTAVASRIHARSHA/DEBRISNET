@@ -1,11 +1,18 @@
+/* ============================================================
+   ConjunctionPanel.css — Blueprint Engineering Theme
+   ============================================================ */
+
 .conjunction-panel {
   padding: 2rem;
   margin: 2rem 0;
-  background: rgba(10, 10, 10, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  background: #FFFFFF;                        /* White document surface */
+  border: 1px solid #D0D4CB;
+  border-left: 3px solid var(--accent-orange);
+  border-radius: 5px;
+  box-shadow: 0 2px 8px rgba(30, 45, 61, 0.08);
 }
 
+/* Inputs group */
 .conjunction-panel .inputs {
   display: flex;
   flex-direction: column;
@@ -13,32 +20,67 @@
   margin-bottom: 1rem;
 }
 
+/* Override global input for this panel */
 .conjunction-panel input {
-  padding: 0.5rem;
-  background: #111;
-  border: 1px solid #333;
-  color: #fff;
+  padding: 0.55rem 0.75rem;
+  background: #FFFFFF;                        /* White — not dark */
+  border: 1.5px solid #A8ADA3;
+  border-radius: 2px;
+  color: #111827;                             /* Strong readable text */
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  width: 100%;
 }
 
+.conjunction-panel input:focus {
+  border-color: var(--accent-orange);
+  box-shadow: 0 0 0 3px rgba(199, 109, 50, 0.12);
+}
+
+/* Analyze button */
 .conjunction-panel .analyze-btn {
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
   align-self: flex-start;
-  padding: 0.5rem 1rem;
-  background: #fff;
-  color: #000;
-  border: none;
+  padding: 0.55rem 1.25rem;
+  background: var(--accent-orange);          /* Engineering orange */
+  color: #FFFFFF;
+  border: 1.5px solid var(--accent-orange);
+  border-radius: 2px;
   cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 1px 4px rgba(199, 109, 50, 0.22);
 }
 
+.conjunction-panel .analyze-btn:hover {
+  background: #A85A24;
+  border-color: #A85A24;
+  box-shadow: 0 3px 10px rgba(199, 109, 50, 0.3);
+  transform: translateY(-1px);
+}
+
+/* Error message */
 .conjunction-panel .error-msg {
-  color: #f44;
+  font-family: var(--font-mono);
+  color: #A83B2E;                             /* Semantic critical red */
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
+/* Result text */
 .conjunction-panel .result p {
-  margin: 0.25rem 0;
-  color: #a1a1aa;
+  margin: 0.3rem 0;
+  font-family: var(--font-prose);
+  color: #374151;                             /* Strong readable body */
+  font-size: 0.9rem;
 }
 
-/* ── Export button ── */
+/* ── Export Button — Engineering Orange (replaces old blue) ── */
 .export-btn {
   position: relative;
   z-index: 10;
@@ -46,31 +88,35 @@
   display: inline-flex;
   align-items: center;
   margin-top: 1.25rem;
-  padding: 0.55rem 1.25rem;
-  background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%);
-  color: #fff;
-  font-size: 0.875rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  border: none;
-  border-radius: 6px;
+  padding: 0.6rem 1.4rem;
+  background: var(--accent-orange);
+  color: #FFFFFF;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  border: 1.5px solid var(--accent-orange);
+  border-radius: 2px;
   cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  box-shadow: 0 1px 4px rgba(199, 109, 50, 0.22);
 }
 
 .export-btn:hover:not(:disabled) {
-  opacity: 0.9;
+  background: #A85A24;
+  border-color: #A85A24;
+  box-shadow: 0 3px 10px rgba(199, 109, 50, 0.32);
   transform: translateY(-1px);
-  box-shadow: 0 4px 18px rgba(59, 130, 246, 0.5);
 }
 
 .export-btn:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: none;
 }
 
 .export-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
@@ -80,13 +126,13 @@
   gap: 0.45rem;
 }
 
-/* spinner */
+/* Spinner — white on orange (correct on dark bg) */
 .export-spinner {
   display: inline-block;
   width: 13px;
   height: 13px;
-  border: 2px solid rgba(255, 255, 255, 0.35);
-  border-top-color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #FFFFFF;
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
 }
