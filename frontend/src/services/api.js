@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL = '';
 
 export const checkHealth = async () => {
     try {
@@ -14,22 +14,30 @@ export const checkHealth = async () => {
 
 export const getSatellites = async () => {
     try {
+        console.log("Requesting:", `${API_BASE_URL}/api/satellites`);
         const response = await fetch(`${API_BASE_URL}/api/satellites`);
+        console.log("Status:", response.status);
         if (!response.ok) throw new Error('Failed to fetch satellites');
-        return await response.json();
+        const data = await response.json();
+        console.log("Received:", data);
+        return data;
     } catch (error) {
-        console.error(error);
+        console.error("REAL API ERROR:", error);
         throw error;
     }
 };
 
 export const getOrbitPrediction = async (noradId) => {
     try {
+        console.log("Requesting:", `${API_BASE_URL}/api/orbit/${noradId}`);
         const response = await fetch(`${API_BASE_URL}/api/orbit/${noradId}`);
+        console.log("Status:", response.status);
         if (!response.ok) throw new Error('Orbit prediction failed');
-        return await response.json();
+        const data = await response.json();
+        console.log("Received:", data);
+        return data;
     } catch (error) {
-        console.error(error);
+        console.error("REAL API ERROR:", error);
         throw error;
     }
 };
