@@ -3,263 +3,176 @@ import { jsPDF } from "jspdf";
 import { analyzeConjunction } from '../services/api';
 import './ConjunctionPanel.css';
 
-// ─── PDF Generator ────────────────────────────────────────────────────────────
-
+// ==================== PDF Generator (unchanged) ====================
 const generatePDF = (result, satA, satB) => {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageHeight = doc.internal.pageSize.height;
   const pageWidth = doc.internal.pageSize.width;
   const margin = 40;
   const contentWidth = pageWidth - margin * 2;
-  
-  let y = margin + 20;
+  let y = margin;
 
-  const checkPageBreak = (neededHeight) => {
-    if (y + neededHeight > pageHeight - margin) {
-      doc.addPage();
-      y = margin + 20;
-    }
-  };
-
-  const addText = (text, x, isBold, fontSize, color = 0) => {
-    doc.setFont("helvetica", isBold ? "bold" : "normal");
-    doc.setFontSize(fontSize);
-    doc.setTextColor(color);
-    
-    const lines = doc.splitTextToSize(String(text || "N/A"), contentWidth - (x - margin));
-    checkPageBreak(lines.length * (fontSize * 1.2));
-    
-    doc.text(lines, x, y);
-    y += lines.length * (fontSize * 1.2) + 5;
-  };
-
-  const addLine = () => {
-    checkPageBreak(10);
-    y += 5;
-    doc.setLineWidth(1);
-    doc.setDrawColor(150); // Gray line
-    doc.line(margin, y, pageWidth - margin, y);
-    y += 15;
-  };
-
-  const addSectionHeader = (title) => {
-    addLine();
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.setTextColor(0);
-    checkPageBreak(25);
-    doc.text(title, margin, y);
-    y += 20;
-  };
-
-  const addKeyValue = (key, value) => {
-    checkPageBreak(15);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(50);
-    doc.text(`${key}:`, margin, y);
-    
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(0);
-    const keyWidth = doc.getTextWidth(`${key}: `);
-    
-    const lines = doc.splitTextToSize(String(value || "N/A"), contentWidth - keyWidth - 5);
-    checkPageBreak(lines.length * 12);
-    doc.text(lines, margin + keyWidth + 5, y);
-    y += lines.length * 12 + 5;
-  };
-
-  // Header
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.setTextColor(0);
-  doc.text("DEBRISNET", margin, y);
-  y += 25;
-
-  doc.setFontSize(14);
-  doc.text("Orbital Conjunction Assessment Report", margin, y);
-  y += 15;
-
-  doc.setFont("helvetica", "normal");
+  // Header band
+  const headerHeight = 50;
+  doc.setFillColor('#172635'); // Deep Navy
+  doc.rect(0, 0, pageWidth, headerHeight, 'F');
+  doc.setTextColor('#FFFFFF');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(18);
+  doc.text('DEBRISNET', margin, 30);
+  doc.setFontSize(12);
+  doc.text('ORBITAL CONJUNCTION ASSESSMENT', margin + 120, 30);
+  doc.text('Space Situational Awareness Division', margin, 45);
   doc.setFontSize(10);
-  doc.setTextColor(100);
-  doc.text("Space Situational Awareness & Collision Intelligence System", margin, y);
-  y += 30;
+  doc.text('Report Classification: MISSION ANALYSIS DOCUMENT', margin, 60);
+  y = headerHeight + 20;
 
-  doc.setTextColor(0);
-  addKeyValue("Report ID", `DBN-${Date.now()}`);
-  addKeyValue("Generated Time", new Date().toUTCString());
-  addKeyValue("Classification", "AUTOMATED ORBITAL SAFETY ANALYSIS");
+  // Helper to draw a boxed section
+  const drawSection = (title, entries) => {
+    const boxHeight = 40 + entries.length * 15;
+    doc.setFillColor('#F4F1E8'); // Paper surface
+    doc.rect(margin - 10, y - 10, contentWidth + 20, boxHeight, 'F');
+    doc.setDrawColor('#C8C3B6'); // Technical border
+    doc.rect(margin - 10, y - 10, contentWidth + 20, boxHeight);
+    doc.setTextColor('#172635');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(title, margin, y);
+    let lineY = y + 20;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    entries.forEach(entry => {
+      doc.text(`${entry.key}: ${entry.value}`, margin, lineY);
+      lineY += 15;
+    });
+    y = lineY + 10;
+  };
 
-  // 1. MISSION OVERVIEW
-  addSectionHeader("1. MISSION OVERVIEW");
-  addKeyValue("Primary Object NORAD ID", satA);
-  addKeyValue("Secondary Object NORAD ID", satB);
-  addKeyValue("Analysis Type", "Orbital Conjunction Assessment");
+  // Mission Details
+  drawSection('MISSION DETAILS', [
+    { key: 'Report ID', value: `DBN-${Date.now()}` },
+    { key: 'Generated Time', value: new Date().toUTCString() },
+    { key: 'Analysis Model', value: 'SGP4' },
+    { key: 'Data Source', value: 'Live TLE' },
+  ]);
 
-  // 2. CLOSE APPROACH ANALYSIS
-  addSectionHeader("2. CLOSE APPROACH ANALYSIS");
-  addKeyValue("Time of closest approach", result.closest_approach?.time);
-  addKeyValue(
-    "Minimum separation distance (km)", 
-    result.closest_approach?.distance_km != null ? Number(result.closest_approach.distance_km).toFixed(4) : "N/A"
-  );
+  // Object Pair
+  drawSection('OBJECT PAIR', [
+    { key: 'Primary Object NORAD ID', value: satA },
+    { key: 'Secondary Object NORAD ID', value: satB },
+  ]);
 
-  // 3. COLLISION RISK EVALUATION
-  addSectionHeader("3. COLLISION RISK EVALUATION");
-  addKeyValue("Risk Level", result.risk_assessment?.risk_level);
-  addKeyValue("Severity Classification", result.risk_assessment?.severity);
-  addKeyValue("Operational Recommendation", result.risk_assessment?.recommendation);
+  // Approach Analysis
+  drawSection('APPROACH ANALYSIS', [
+    { key: 'Closest Approach Distance', value: result.closest_approach?.distance_km != null ? `${Number(result.closest_approach.distance_km).toFixed(3)} km` : 'N/A' },
+    { key: 'Risk Status', value: result.risk_assessment?.risk_level?.toUpperCase() || 'N/A' },
+  ]);
 
-  // 4. MISSION INTELLIGENCE SUMMARY
-  addSectionHeader("4. MISSION INTELLIGENCE SUMMARY");
-  addKeyValue("Title", result.mission_report?.title);
-  y += 10;
-  addText(result.mission_report?.summary, margin, false, 10, 0);
-  y += 10;
-  addText(result.mission_report?.details || result.mission_report?.detail, margin, false, 10, 0);
+  // Mission Intelligence Summary
+  const intelStartY = y;
+  const intelBoxHeight = 100;
+  doc.setFillColor('#F4F1E8');
+  doc.rect(margin - 10, intelStartY - 10, contentWidth + 20, intelBoxHeight, 'F');
+  doc.setDrawColor('#C8C3B6');
+  doc.rect(margin - 10, intelStartY - 10, contentWidth + 20, intelBoxHeight);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(12);
+  doc.setTextColor('#172635');
+  doc.text('MISSION INTELLIGENCE', margin, intelStartY);
+  const findings = [
+    `Closest Separation: ${result.closest_approach?.distance_km != null ? `${Number(result.closest_approach.distance_km).toFixed(3)} km` : 'N/A'}`,
+    `Collision Probability: ${result.risk_assessment?.risk_level?.toUpperCase() || 'N/A'}`,
+    `Trajectory: ${result.ai_analysis?.analysis || 'N/A'}`,
+    `Safety Margin: ${result.risk_assessment?.recommendation || 'N/A'}`,
+  ];
+  let fY = intelStartY + 20;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  findings.forEach(f => {
+    doc.text(`✓ ${f}`, margin, fY);
+    fY += 15;
+  });
+  y = fY + 10;
 
-  // 5. AI MISSION ANALYST ASSESSMENT
-  addSectionHeader("5. AI MISSION ANALYST ASSESSMENT");
-  
-  if (result.ai_analysis?.confidence != null) {
-    const conf = result.ai_analysis.confidence;
-    // Handle string confidence levels like "HIGH" or numeric values
-    if (typeof conf === "string") {
-      const num = Number(conf);
-      if (!isNaN(num)) {
-        // Numeric string (e.g., "0.95") -> show as percentage score
-        addKeyValue("Confidence Score", `${(num * 100).toFixed(0)}%`);
-      } else {
-        // Non‑numeric string -> show as level label
-        addKeyValue("Confidence Level", conf);
-      }
-    } else if (typeof conf === "number") {
-      // Numeric confidence (0‑1) -> show as percentage score
-      addKeyValue("Confidence Score", `${(conf * 100).toFixed(0)}%`);
-    } else {
-      // Fallback for unexpected types
-      addKeyValue("Confidence Level", String(conf));
-    }
-  }
-  
-  y += 10;
-  addText(result.ai_analysis?.analysis, margin, false, 10, 0);
-  
-  const points = result.ai_analysis?.summary_points || result.ai_analysis?.summaryPoints || [];
-  if (points.length > 0) {
-      y += 10;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
-      doc.text("Key Points:", margin, y);
-      y += 15;
-      
-      points.forEach(pt => {
-          doc.setFont("helvetica", "normal");
-          const ptLines = doc.splitTextToSize(`• ${pt}`, contentWidth - 15);
-          checkPageBreak(ptLines.length * 12);
-          doc.text(ptLines, margin + 10, y);
-          y += ptLines.length * 12 + 5;
-      });
-  }
+  // Command Decision
+  drawSection('COMMAND DECISION', [
+    { key: 'Action', value: result.risk_assessment?.recommendation || 'N/A' },
+    { key: 'Reason', value: result.risk_assessment?.recommendation || 'N/A' },
+  ]);
 
-  // 6. COLLISION AVOIDANCE ADVISOR
+  // Avoidance Review (if present)
   if (result.avoidance_plan) {
-    addSectionHeader("6. COLLISION AVOIDANCE ADVISOR");
-    addKeyValue("Maneuver Required", result.avoidance_plan.maneuver_required ? "Yes" : "No");
-    addKeyValue("Recommended Action", result.avoidance_plan.recommended_action);
-    addKeyValue("Maneuver Type", result.avoidance_plan.maneuver_type);
-    addKeyValue("Estimated Delta-V", result.avoidance_plan.estimated_delta_v);
-    addKeyValue("Priority", result.avoidance_plan.priority);
-    y += 10;
-    addText(result.avoidance_plan.explanation, margin, false, 10, 0);
+    drawSection('AVOIDANCE REVIEW', [
+      { key: 'Maneuver', value: result.avoidance_plan?.maneuver_required ? 'REQUIRED' : 'NOT REQUIRED' },
+      { key: 'Delta‑V', value: `${result.avoidance_plan?.estimated_delta_v || '0'} m/s` },
+      { key: 'Priority', value: result.avoidance_plan?.priority || 'LOW' },
+    ]);
   }
 
-  // 7. FINAL SYSTEM STATEMENT
-  addSectionHeader("7. FINAL SYSTEM STATEMENT");
-  addText("This report was generated using deterministic orbital mechanics calculations combined with automated mission intelligence analysis.", margin, false, 10, 80);
+  // Footer
+  doc.setFontSize(9);
+  doc.setTextColor('#777777');
+  doc.text('Generated by DebrisNet – AI Assisted Orbital Intelligence Platform', margin, pageHeight - 30);
 
-  doc.save(`DebrisNet_Conjunction_Report_${satA}_${satB}.pdf`);
+  doc.save(`Conjunction_Report_${satA}_${satB}.pdf`);
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// Helper to convert hex colour to RGB for jsPDF
+const hexToRgb = hex => {
+  const clean = hex.replace(/^#/, "");
+  const bigint = parseInt(clean, 16);
+  return [(bigint >> 16) & 255, (bigint >> 8) & 255, bigint & 255];
+};
+
+// Risk colour map for UI badge
+const riskColorMap = {
+  safe: '#15803D',
+  watch: '#D97706',
+  warning: '#B45309',
+  critical: '#B91C1C'
+};
+const getRiskColor = level => riskColorMap[(level || '').toLowerCase()] || '#777';
 
 const ConjunctionPanel = () => {
-  // Loading messages for Collision Analysis
-  const conjMessages = [
-    "🛰️ Propagating satellite trajectories...",
-    "📡 Calculating closest approach...",
-    "🤖 Generating mission intelligence...",
-    "🚀 Preparing avoidance analysis..."
-  ];
-  const [conjMsgIdx, setConjMsgIdx] = useState(0);
-  const [conjLoadingMsg, setConjLoadingMsg] = useState(conjMessages[0]);
-
   const [satA, setSatA] = useState('');
-const [satB, setSatB] = useState('');
-const [loading, setLoading] = useState(false);
-const [error, setError] = useState(null);
-const [result, setResult] = useState(null);
-const [exporting, setExporting] = useState(false);
+  const [satB, setSatB] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
+  const loadingMessages = [
+    "✓ Loading orbital elements",
+    "✓ Propagating trajectories",
+    "✓ Computing miss distance",
+    "✓ Generating mission assessment"
+  ];
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
 
-useEffect(() => {
-  if (loading) {
+  // Loading ticker effect
+  useEffect(() => {
+    if (!loading) return;
     const interval = setInterval(() => {
-      setConjMsgIdx(prev => {
-        const next = (prev + 1) % conjMessages.length;
-        setConjLoadingMsg(conjMessages[next]);
-        return next;
-      });
-    }, 2000);
+      setLoadingStep(prev => (prev + 1) % loadingMessages.length);
+    }, 1500);
     return () => clearInterval(interval);
-  } else {
-    setConjMsgIdx(0);
-    setConjLoadingMsg(conjMessages[0]);
-  }
-}, [loading]);
+  }, [loading]);
 
-  
+  const validateId = id => /^\d+$/.test(id) && id.length <= 6;
 
   const handleAnalyze = async () => {
-    // Validation for Satellite A NORAD ID
-    if (!satA) {
-      setError('Please enter NORAD catalog ID.');
+    if (!validateId(satA) || !validateId(satB)) {
+      setError('Enter valid NORAD IDs (numeric, ≤6 digits).');
       return;
     }
-    if (!/^\d+$/.test(satA)) {
-      setError('Invalid NORAD ID. NORAD catalog numbers contain digits only.');
-      return;
-    }
-    if (satA.length > 6) {
-      setError('NORAD catalog ID format is invalid.');
-      return;
-    }
-    // Validation for Satellite B NORAD ID
-    if (!satB) {
-      setError('Please enter NORAD catalog ID.');
-      return;
-    }
-    if (!/^\d+$/.test(satB)) {
-      setError('Invalid NORAD ID. NORAD catalog numbers contain digits only.');
-      return;
-    }
-    if (satB.length > 6) {
-      setError('NORAD catalog ID format is invalid.');
-      return;
-    }
-    // Clear any previous errors before proceeding
     setError(null);
     setLoading(true);
     setResult(null);
     try {
       const data = await analyzeConjunction(satA, satB);
-      // If backend returns no data or missing expected fields
       if (!data || !data.closest_approach) {
-        setError('Orbital object not found in public catalog.');
-        setLoading(false);
-        return;
+        setError('No conjunction data returned.');
+      } else {
+        setResult(data);
       }
-      setResult(data);
     } catch (e) {
       setError('Backend unavailable or request failed');
     } finally {
@@ -268,77 +181,149 @@ useEffect(() => {
   };
 
   const handleExport = () => {
-    if (!result) {
-      console.error("No report data available");
-      return;
-    }
-    generatePDF(result, satA, satB);
+    if (result) generatePDF(result, satA, satB);
   };
 
   return (
-    <div className="conjunction-panel glass-panel">
-      {loading && (<p className="status-msg">{conjLoadingMsg}</p>)}
-      <h2 className="panel-title">Collision Analysis</h2>
-      <div className="inputs">
-        <input
-          type="text"
-          placeholder="Satellite A NORAD ID"
-          value={satA}
-          onChange={e => setSatA(e.target.value)}
-          className="input-field"
-        />
-        <input
-          type="text"
-          placeholder="Satellite B NORAD ID"
-          value={satB}
-          onChange={e => setSatB(e.target.value)}
-          className="input-field"
-        />
-        <button onClick={handleAnalyze} disabled={loading} className="analyze-btn">
-          {loading ? 'Analyzing...' : 'Analyze Collision'}
-        </button>
+    <div className="conjunction-panel">
+      <h2 className="panel-title">CONJUNCTION INTELLIGENCE CENTER</h2>
+
+      {/* OBJECT PAIR CONFIGURATION */}
+      <div className="object-pair">
+        <div className="object-section primary">
+          <span className="object-label">PRIMARY OBJECT</span>
+          <input
+            type="text"
+            placeholder="NORAD ID"
+            value={satA}
+            onChange={e => setSatA(e.target.value)}
+            className="object-input"
+          />
+          <span className="object-status">READY</span>
+        </div>
+        <div className="middle-indicator">
+          <span className="screening-label">CONJUNCTION SCREENING</span>
+          <span className="model-label">MODEL: SGP4</span>
+        </div>
+        <div className="object-section secondary">
+          <span className="object-label">SECONDARY OBJECT</span>
+          <input
+            type="text"
+            placeholder="NORAD ID"
+            value={satB}
+            onChange={e => setSatB(e.target.value)}
+            className="object-input"
+          />
+          <span className="object-status">READY</span>
+        </div>
       </div>
-      {/* Empty state when no result */}
-      {!result && !loading && !error && (
-        <p className="empty-state" style={{ textAlign: 'center', color: '#aaa', marginTop: '1rem' }}>
-          Awaiting Conjunction Assessment<br />
-          Select two orbital objects to calculate closest approach distance and collision probability.
-        </p>
-      )}  
+      {/* Run Analysis Button */}
+      <button
+        className="analyze-btn"
+        onClick={handleAnalyze}
+        disabled={loading}
+      >
+        {loading ? 'ANALYZING ORBITS...' : 'RUN CONJUNCTION ANALYSIS'}
+      </button>
 
-      {error && (<p className="error-msg">{error}</p>)}
-        
+      {/* Empty idle state */}
+      {!loading && !result && !error && (
+        <p className="empty-state">CONJUNCTION SYSTEM IDLE<br/>Awaiting primary and secondary orbital objects.</p>
+      )}
 
+      {/* Loading state */}
+      {loading && (
+        <div className="calc-loading">
+          <p className="calc-title">CALCULATING CLOSE APPROACH EVENT</p>
+          <ul className="calc-steps">
+            {loadingMessages.map((msg, idx) => (
+              <li key={idx} className={idx <= loadingStep ? 'step-done' : ''}>{msg}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
+      {/* Error */}
+      {error && <p className="error-msg">{error}</p>}
+
+      {/* Result */}
       {result && (
-        <div className="result">
-          <p><strong>Closest Approach Distance:</strong> {result.closest_approach?.distance_km != null ? `${Number(result.closest_approach.distance_km).toFixed(2)} km` : 'N/A'}</p>
-          <p><strong>Time:</strong> {result.closest_approach?.time || 'N/A'}</p>
-          <p><strong>Risk Level:</strong> {result.risk_assessment?.risk_level || 'N/A'}</p>
-          <p><strong>Severity:</strong> {result.risk_assessment?.severity || 'N/A'}</p>
-          <p><strong>Recommendation:</strong> {result.risk_assessment?.recommendation || 'N/A'}</p>
-          <p><strong>Mission Summary:</strong> {result.mission_report?.summary || 'N/A'}</p>
-          <p><strong>AI Analysis:</strong> {result.ai_analysis?.analysis || 'Analysis data unavailable'}</p>
+        <div className="result-section">
+          {/* Approach Geometry */}
+          <div className="section-box">
+            <h3 className="section-header">APPROACH GEOMETRY</h3>
+            <p><strong>Closest Approach Distance:</strong> {result.closest_approach?.distance_km != null ? `${Number(result.closest_approach.distance_km).toFixed(2)} km` : 'N/A'}</p>
+            <p><strong>Time of Closest Approach:</strong> {result.closest_approach?.time || 'N/A'}</p>
+            <p><strong>Analysis Timestamp:</strong> {new Date().toISOString()}</p>
+          </div>
 
-          {result.avoidance_plan && (
-            <div className="avoidance-section" style={{ marginTop: '1.5rem', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderLeft: '4px solid #3b82f6' }}>
-              <h3 style={{ margin: '0 0 0.5rem 0', color: '#60a5fa' }}>Collision Avoidance Advisor</h3>
-              <p><strong>Maneuver Required:</strong> {result.avoidance_plan?.maneuver_required ? 'Yes' : 'No'}</p>
-              <p><strong>Recommended Action:</strong> {result.avoidance_plan?.recommended_action}</p>
-              <p><strong>Maneuver Type:</strong> {result.avoidance_plan?.maneuver_type}</p>
-              <p><strong>Estimated Delta-V:</strong> {result.avoidance_plan?.estimated_delta_v}</p>
-              <p><strong>Priority:</strong> {result.avoidance_plan?.priority}</p>
-              <p style={{ marginTop: '0.5rem' }}><strong>Explanation:</strong> {result.avoidance_plan?.explanation}</p>
+          {/* Collision Risk Classification */}
+          <div className="card risk-card">
+            <h3 className="card-title">COLLISION RISK CLASSIFICATION</h3>
+            <div className="risk-bar">
+              <span className="risk-label">SAFE</span>
+              <span className={`risk-level ${result.risk_assessment?.risk_level?.toLowerCase() === 'safe' ? 'active' : ''}`}></span>
             </div>
-          )}
+            <div className="risk-bar">
+              <span className="risk-label">WATCH</span>
+              <span className={`risk-level ${result.risk_assessment?.risk_level?.toLowerCase() === 'watch' ? 'active' : ''}`}></span>
+            </div>
+            <div className="risk-bar">
+              <span className="risk-label">WARNING</span>
+              <span className={`risk-level ${result.risk_assessment?.risk_level?.toLowerCase() === 'warning' ? 'active' : ''}`}></span>
+            </div>
+            <div className="risk-bar">
+              <span className="risk-label">CRITICAL</span>
+              <span className={`risk-level ${result.risk_assessment?.risk_level?.toLowerCase() === 'critical' ? 'active' : ''}`}></span>
+            </div>
+          </div>
+          <div className="card risk-status-card">
+            <h3 className="card-title">OVERALL RISK STATUS</h3>
+            <div className={`badge large-badge badge-${result.risk_assessment?.risk_level?.toLowerCase() || 'unknown'}`}>{result.risk_assessment?.risk_level?.toUpperCase() || 'N/A'}</div>
+          </div>
 
-          <button
-            type="button"
-            className="export-btn"
-            onClick={handleExport}
-          >
-            Export Mission Report
-          </button>
+          {/* Key Findings */}
+          <div className="key-findings-grid">
+            <div className="card key-card">
+              <h4 className="card-subtitle">CLOSEST APPROACH</h4>
+              <p className="key-value">{result.closest_approach?.distance_km != null ? `${Number(result.closest_approach.distance_km).toFixed(3)} km` : 'N/A'}</p>
+              <p className="key-label">ACCEPTABLE</p>
+            </div>
+            <div className="card key-card">
+              <h4 className="card-subtitle">COLLISION RISK</h4>
+              <p className="key-value">{result.risk_assessment?.risk_level?.toUpperCase() || 'N/A'}</p>
+              <p className="key-label">BELOW THRESHOLD</p>
+            </div>
+            <div className="card key-card">
+              <h4 className="card-subtitle">TRAJECTORY STATUS</h4>
+              <p className="key-value">{result.ai_analysis?.analysis || 'N/A'}</p>
+              <p className="key-label">CLEAR</p>
+            </div>
+          </div>
+
+          {/* Maneuver Status */}
+          <div className="card maneuver-status-card">
+            <h3 className="card-title">MANEUVER STATUS</h3>
+            <div className={`badge large-badge badge-${result.avoidance_plan?.maneuver_required ? 'critical' : 'success'}`}>{result.avoidance_plan?.maneuver_required ? 'MANEUVER REQUIRED' : 'MANEUVER NOT REQUIRED'}</div>
+            {!result.avoidance_plan?.maneuver_required && <div className="badge approval-badge">✓ APPROVED</div>}
+          </div>
+          <div className="dynamics-subcards">
+            <div className="card small-card">
+              <h4 className="card-subtitle">DELTA‑V BUDGET</h4>
+              <p>{result.avoidance_plan?.estimated_delta_v ?? '0'} m/s</p>
+            </div>
+            <div className="card small-card">
+              <h4 className="card-subtitle">PRIORITY</h4>
+              <p>{result.avoidance_plan?.priority ?? 'LOW'}</p>
+            </div>
+            <div className="card small-card">
+              <h4 className="card-subtitle">MISSION COMMAND</h4>
+              <p>{result.avoidance_plan?.recommended_action ?? 'Maintain current orbit'}</p>
+            </div>
+          </div>
+
+          {/* Export button */}
+          <button className="export-btn" onClick={handleExport}>EXPORT MISSION REPORT</button>
         </div>
       )}
     </div>

@@ -140,3 +140,47 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+/* ── Card components ── */
+.card {
+  background: #F4F1E8;
+  border: 1px solid #C8C3B6;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+.intel-card {
+  border-left: 4px solid #C76D32; /* Engineering Orange accent */
+}
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.status-badge {
+  color: #FFFFFF;
+}
+.risk-card {
+  margin-top: 1rem;
+}
+/* ── Additional UI styles ── */
+/* Badge color variants */
+.badge-success { background: #2F7D4A; color: #FFFFFF; }
+.badge-warning { background: #C76D32; color: #FFFFFF; }
+.badge-amber { background: #C49A3A; color: #FFFFFF; }
+.badge-critical { background: #A94438; color: #FFFFFF; }
+/* Large badge for emphasis */
+.large-badge { font-size: 1rem; padding: 0.3rem 0.8rem; }
+/* Grid layout for key findings */
+.key-findings-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
+.key-findings-grid .key-card { flex: 1 1 calc(33% - 1rem); }
+/* Subcards for dynamics */
+.dynamics-subcards { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
+.dynamics-subcards .small-card { flex: 1 1 calc(33% - 1rem); }
+/* Maneuver status card */
+.maneuver-status-card { margin-top: 1rem; }
+/* Approval badge */
+.approval-badge { background: #2F7D4A; color: #FFFFFF; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; }
