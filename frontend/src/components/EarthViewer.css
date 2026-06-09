@@ -1,0 +1,219 @@
+/* ============================================================
+   EarthViewer.css — Orbital Tracking Command Center Theme
+   ============================================================ */
+
+.orbital-command-center {
+  background: #F4F6F8;                        /* Engineering paper surface */
+  border: 1px solid #1E2D3D;                  /* Navy blueprint border */
+  border-top: 4px solid var(--accent-orange);
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(30, 45, 61, 0.15);
+  margin: 2rem 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+.occ-header {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.5rem;
+  border-bottom: 2px solid #1E2D3D;
+  background: #E8ECEF;
+}
+
+.occ-module-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-orange);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.occ-title {
+  font-family: var(--font-ui);
+  font-size: 1.25rem;
+  color: #1E2D3D;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+/* ── Main Layout Grid ── */
+.occ-layout {
+  display: flex;
+  flex-direction: row;
+  min-height: 480px;
+}
+
+/* Responsive adjustment for smaller screens */
+@media (max-width: 900px) {
+  .occ-layout {
+    flex-direction: column;
+  }
+}
+
+/* ── Panels (Left & Right) ── */
+.occ-panel {
+  flex: 0 0 240px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: #FFFFFF;
+}
+
+.left-panel {
+  border-right: 2px solid #1E2D3D;
+}
+
+.right-panel {
+  border-left: 2px solid #1E2D3D;
+}
+
+.occ-panel-header {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #1E2D3D;
+  margin: 0 0 0.5rem 0;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px dashed #1E2D3D;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+/* ── Telemetry Blocks ── */
+.occ-telemetry-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.occ-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #4A5568;
+  letter-spacing: 0.05em;
+}
+
+.occ-value {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: #1E2D3D;
+  font-weight: 700;
+}
+
+.occ-pos-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.occ-pos-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #1E2D3D;
+  background: #F4F6F8;
+  border-left: 2px solid var(--accent-orange);
+  padding: 0.25rem 0.5rem;
+  line-height: 1.4;
+}
+
+/* ── Status Indicators ── */
+.occ-status {
+  font-family: var(--font-mono);
+  color: #4A5568;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.occ-status.active {
+  color: #D35400; /* Distinct orange for tracking active */
+  animation: pulse-status 2s infinite;
+}
+
+@keyframes pulse-status {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* ── Center Viewer Wrapper ── */
+.occ-viewer-wrapper {
+  flex: 1;
+  position: relative;
+  background: #000000;
+  border: 1px solid #1E2D3D; /* internal border around canvas */
+  margin: 1rem;
+  min-height: 400px;
+}
+
+/* Subdued 3D wrapper overlays for CAD look */
+.occ-viewer-overlay {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #00eaff; /* technical cyan for overlays */
+  opacity: 0.6;
+  z-index: 10;
+  pointer-events: none;
+  letter-spacing: 0.05em;
+}
+
+.top-left { top: 0.5rem; left: 0.5rem; }
+.top-right { top: 0.5rem; right: 0.5rem; }
+.bottom-left { bottom: 0.5rem; left: 0.5rem; }
+
+/* ── Empty State ── */
+.occ-empty-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: rgba(10, 15, 20, 0.85); /* Dark tech overlay */
+  z-index: 5;
+  pointer-events: none;
+  border: 1px dashed var(--accent-orange);
+  margin: -1px; /* overlap border */
+}
+
+.occ-empty-title {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--accent-orange);
+  margin: 0;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  text-transform: uppercase;
+  animation: blink-title 1.5s infinite;
+}
+
+@keyframes blink-title {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.occ-empty-subtitle {
+  font-family: var(--font-mono);
+  color: #A0AEC0;
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+}
+
+/* ── Canvas Container ── */
+.occ-canvas-container {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+}

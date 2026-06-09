@@ -1,192 +1,255 @@
 /* ============================================================
-   SatelliteExplorer.css — Blueprint Engineering Theme
+   SatelliteExplorer.css — Mission Operations Console Theme
    ============================================================ */
 
-.satellite-explorer {
-  padding: 2rem;
-  margin: 2rem 0;
-  background: #FFFFFF;                        /* White document surface */
-  border: 1px solid #D0D4CB;
-  border-left: 3px solid var(--accent-orange);
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(30, 45, 61, 0.08);
+.mission-module {
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  background: #F4F6F8;                        /* Engineering paper surface */
+  border: 1px solid #1E2D3D;                  /* Navy blueprint border */
+  border-top: 4px solid var(--accent-orange); /* Orange highlight */
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(30, 45, 61, 0.15);
+  position: relative;
 }
 
-/* Subtitle — readable secondary text */
-.explorer-subtitle {
+.mission-module::before {
+  content: "DOCUMENT: DBN-SYS-01";
+  position: absolute;
+  top: -24px;
+  right: 0;
   font-family: var(--font-mono);
-  color: #4A5568;                             /* Legible label — not faded */
-  font-size: 0.85rem;
-  margin: -0.5rem 0 1.25rem;
-  letter-spacing: 0.04em;
+  font-size: 0.75rem;
+  color: #1E2D3D;
+  background: var(--accent-orange);
+  padding: 2px 8px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
 }
 
-/* ── Search Row ── */
+/* ── Header ── */
+.module-header {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1.25rem;
+  border-bottom: 2px solid #1E2D3D;
+  padding-bottom: 0.5rem;
+}
+
+.module-id {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--accent-orange);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.25rem;
+}
+
+.section-title {
+  font-family: var(--font-ui);
+  font-size: 1.25rem;
+  color: #1E2D3D;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+/* ── Status Area ── */
+.module-status-area {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  background: #E8ECEF;
+  border: 1px dashed #1E2D3D;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.status-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: #4A5568;
+  letter-spacing: 0.05em;
+}
+
+.status-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1E2D3D;
+}
+
+.status-value.live {
+  color: #D35400; /* Distinct orange for live feed */
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.6; }
+  100% { opacity: 1; }
+}
+
+/* ── Search Area ── */
+.explorer-search-area {
+  margin-bottom: 1.5rem;
+}
+
+.search-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #1E2D3D;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
 .explorer-search-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
 }
 
 .explorer-search-input {
   flex: 1;
-  padding: 0.55rem 0.75rem;
-  background: #FFFFFF;                        /* White field */
-  border: 1.5px solid #A8ADA3;
-  border-radius: 2px;
-  color: #111827;                             /* Strong readable text */
+  padding: 0.65rem;
+  background: #FFFFFF;
+  border: 1px solid #1E2D3D;
+  color: #1E2D3D;
   font-family: var(--font-mono);
   font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  border-radius: 0; /* CAD style */
 }
 
 .explorer-search-input::placeholder {
-  color: #8A8F98;
-  font-style: italic;
+  color: #A0AEC0;
+  font-style: normal;
 }
 
 .explorer-search-input:focus {
   border-color: var(--accent-orange);
-  box-shadow: 0 0 0 3px rgba(199, 109, 50, 0.12);
+  box-shadow: inset 2px 0 0 var(--accent-orange);
 }
 
 .explorer-clear-btn {
-  background: #FFFFFF;
-  border: 1.5px solid #A8ADA3;
-  color: #374151;                             /* Readable — not invisible grey */
-  padding: 0.45rem 0.75rem;
+  background: #1E2D3D;
+  border: 1px solid #1E2D3D;
+  color: #FFFFFF;
+  padding: 0.65rem 0.85rem;
   cursor: pointer;
-  font-family: var(--font-ui);
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  border-radius: 2px;
-  transition: border-color 0.15s ease, color 0.15s ease;
-  box-shadow: none;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
 }
 
 .explorer-clear-btn:hover {
-  color: var(--accent-orange);
+  background: var(--accent-orange);
   border-color: var(--accent-orange);
-  background: rgba(199, 109, 50, 0.04);
-  box-shadow: none;
-  transform: none;
 }
 
 /* ── Status / Info Text ── */
-.explorer-status-msg {
+.explorer-status-msg, .explorer-error-msg, .explorer-count, .explorer-empty-msg {
   font-family: var(--font-mono);
-  color: #3D7A52;                             /* NASA Green — semantic */
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
 }
 
-.explorer-error-msg {
-  font-family: var(--font-mono);
-  color: #A83B2E;                             /* Critical Red — semantic */
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin: 0.5rem 0;
-}
-
-.explorer-count {
-  font-family: var(--font-mono);
-  color: #4A5568;                             /* Readable count label */
-  font-size: 0.8rem;
-  margin-bottom: 0.75rem;
-}
-
-.explorer-empty-msg {
-  font-family: var(--font-prose);
-  color: #5A6978;
-  font-size: 0.9rem;
-  padding: 1rem 0;
-}
+.explorer-status-msg { color: #1E2D3D; }
+.explorer-error-msg { color: #E53E3E; font-weight: 700; border-left: 3px solid #E53E3E; padding-left: 0.5rem; }
+.explorer-count { color: #4A5568; }
 
 /* ── Results List ── */
 .explorer-results {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  max-height: 420px;
+  gap: 0.75rem;
+  max-height: 400px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 0.5rem;
 }
 
-.explorer-results::-webkit-scrollbar { width: 5px; }
-.explorer-results::-webkit-scrollbar-track { background: #F5F5F0; }
-.explorer-results::-webkit-scrollbar-thumb {
-  background: #A8ADA3;
-  border-radius: 1px;
-}
+.explorer-results::-webkit-scrollbar { width: 6px; }
+.explorer-results::-webkit-scrollbar-track { background: #E8ECEF; }
+.explorer-results::-webkit-scrollbar-thumb { background: #1E2D3D; }
 
-/* ── Individual Result Card ── */
-.explorer-card {
+/* ── Blueprint Card ── */
+.blueprint-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.6rem 0.9rem;
-  background: #FAFAF8;                        /* Warm near-white */
-  border: 1px solid #D0D4CB;
-  border-radius: 3px;
-  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-  cursor: pointer;
-}
-
-.explorer-card:hover {
+  padding: 0.75rem;
   background: #FFFFFF;
-  border-color: var(--accent-orange);
-  box-shadow: 0 2px 6px rgba(199, 109, 50, 0.10);
+  border: 1px solid #1E2D3D;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
-.explorer-card-info {
+.blueprint-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #1E2D3D;
+  transition: background 0.2s ease;
+}
+
+.blueprint-card:hover {
+  background: #F4F6F8;
+  border-color: var(--accent-orange);
+}
+
+.blueprint-card:hover::before {
+  background: var(--accent-orange);
+}
+
+.card-data-row {
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  min-width: 100px;
 }
 
-/* Satellite name — strong, readable */
-.explorer-sat-name {
-  font-family: var(--font-ui);
-  color: #1E2D3D;                             /* Deep navy — primary */
-  font-size: 0.9rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-/* NORAD ID — mono, secondary */
-.explorer-norad-id {
+.data-label {
   font-family: var(--font-mono);
-  color: #4A5568;                             /* Readable secondary */
-  font-size: 0.75rem;
+  font-size: 0.6rem;
+  color: #718096;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+
+.data-value {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: #1E2D3D;
+  font-weight: 700;
+}
+
+.data-value.trackable {
+  color: #38A169; /* Status green */
 }
 
 /* ── Track Button ── */
 .explorer-track-btn {
-  font-family: var(--font-ui);
-  font-size: 0.78rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  background: var(--accent-orange);
-  color: #FFFFFF;
-  border: 1.5px solid var(--accent-orange);
-  padding: 0.35rem 0.85rem;
-  border-radius: 2px;
+  background: transparent;
+  color: var(--accent-orange);
+  border: 1px solid var(--accent-orange);
+  padding: 0.4rem 0.6rem;
   cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease;
-  white-space: nowrap;
-  box-shadow: 0 1px 3px rgba(199, 109, 50, 0.2);
+  transition: all 0.2s ease;
 }
 
 .explorer-track-btn:hover {
-  background: #A85A24;
-  border-color: #A85A24;
-  box-shadow: 0 2px 6px rgba(199, 109, 50, 0.3);
-  transform: translateY(-1px);
+  background: var(--accent-orange);
+  color: #FFFFFF;
 }

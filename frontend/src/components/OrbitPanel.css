@@ -1,82 +1,143 @@
 /* ============================================================
-   OrbitPanel.css — Blueprint Engineering Theme
+   OrbitPanel.css — Mission Operations Console Theme
    ============================================================ */
 
+/* The .mission-module class is shared with SatelliteExplorer.css but we can re-define or rely on the global cascade.
+   Since they might be isolated, we copy the core structure just in case, or use specific overrides. */
+
 .orbit-panel {
-  padding: 2rem;
-  margin: 2rem 0;
-  background: #FFFFFF;                        /* White document surface */
-  border: 1px solid #D0D4CB;
-  border-left: 3px solid var(--accent-orange);
-  border-radius: 5px;
-  box-shadow: 0 2px 8px rgba(30, 45, 61, 0.08);
+  /* Inherits .mission-module from SatelliteExplorer or duplicates here */
 }
 
-.orbit-panel .input-group {
+/* ── Search Area / Input ── */
+.orbit-input-area {
+  margin-bottom: 1.5rem;
+}
+
+.orbit-input-row {
   display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-/* Override global input — white engineering field */
-.orbit-panel input {
+.orbit-search-input {
   flex: 1;
-  min-width: 140px;
-  padding: 0.55rem 0.75rem;
-  background: #FFFFFF;                        /* White — not dark */
-  border: 1.5px solid #A8ADA3;
-  border-radius: 2px;
-  color: #111827;                             /* Strong readable text */
+  padding: 0.65rem;
+  background: #FFFFFF;
+  border: 1px solid #1E2D3D;
+  color: #1E2D3D;
   font-family: var(--font-mono);
   font-size: 0.9rem;
   outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  width: auto;
+  border-radius: 0;
 }
 
-.orbit-panel input:focus {
+.orbit-search-input::placeholder {
+  color: #A0AEC0;
+}
+
+.orbit-search-input:focus {
   border-color: var(--accent-orange);
-  box-shadow: 0 0 0 3px rgba(199, 109, 50, 0.12);
+  box-shadow: inset 2px 0 0 var(--accent-orange);
 }
 
-/* Primary action button */
-.orbit-panel .btn-primary {
-  font-family: var(--font-ui);
+.orbit-predict-btn {
+  background: var(--accent-orange);
+  border: 1px solid var(--accent-orange);
+  color: #FFFFFF;
+  padding: 0.65rem 1.25rem;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.orbit-predict-btn:hover:not(:disabled) {
+  background: #D35400;
+  border-color: #D35400;
+}
+
+.orbit-predict-btn:disabled {
+  background: #A0AEC0;
+  border-color: #A0AEC0;
+  cursor: not-allowed;
+}
+
+/* ── Status / Info Text ── */
+.orbit-status-msg {
+  font-family: var(--font-mono);
+  color: #D35400; /* Orange loading */
   font-size: 0.85rem;
   font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  margin-bottom: 1rem;
+  animation: pulse 1.5s infinite;
+}
+
+.orbit-error-msg {
+  font-family: var(--font-mono);
+  color: #E53E3E;
+  font-size: 0.85rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  border-left: 3px solid #E53E3E;
+  padding-left: 0.5rem;
+}
+
+.empty-state {
+  font-family: var(--font-mono);
+  color: #718096;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 2rem 0;
+  border: 1px dashed #A0AEC0;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+/* ── Telemetry Grid ── */
+.orbit-result {
+  margin-top: 1rem;
+}
+
+.telemetry-header {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #1E2D3D;
+  background: #E8ECEF;
+  padding: 0.25rem 0.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  border-left: 3px solid #1E2D3D;
+}
+
+.telemetry-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.telemetry-card {
+  /* .blueprint-card styles from SatelliteExplorer are applied */
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  background: #FFFFFF;
+  border: 1px solid #1E2D3D;
+  position: relative;
+}
+
+.telemetry-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
   background: var(--accent-orange);
-  color: #FFFFFF;
-  border: 1.5px solid var(--accent-orange);
-  border-radius: 2px;
-  padding: 0.55rem 1.25rem;
-  cursor: pointer;
-  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
-  box-shadow: 0 1px 4px rgba(199, 109, 50, 0.22);
 }
 
-.orbit-panel .btn-primary:hover {
-  background: #A85A24;
-  border-color: #A85A24;
-  box-shadow: 0 3px 10px rgba(199, 109, 50, 0.3);
-  transform: translateY(-1px);
-}
-
-/* Status / error — semantic, readable */
-.orbit-panel .status-msg {
-  font-family: var(--font-mono);
-  color: #3D7A52;                             /* NASA Green */
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
-}
-
-.orbit-panel .error-msg {
-  font-family: var(--font-mono);
-  color: #A83B2E;                             /* Critical Red */
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-top: 0.5rem;
+.telemetry-value {
+  font-size: 1rem;
+  margin-top: 0.2rem;
 }

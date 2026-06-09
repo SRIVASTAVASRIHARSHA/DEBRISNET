@@ -45,31 +45,45 @@ const SatelliteExplorer = ({ onSelectSatellite }) => {
   };
 
   return (
-    <div className="satellite-explorer glass-panel">
-      <h2 className="section-title">Satellite Explorer</h2>
-      <p className="explorer-subtitle">
-        Search the live catalog and track any satellite by name.
-      </p>
+    <div className="satellite-explorer mission-module">
+      <div className="module-header">
+        <span className="module-id">MODULE DBN-01</span>
+        <h2 className="section-title">SATELLITE CATALOG TERMINAL</h2>
+      </div>
 
-      <div className="explorer-search-row">
-        <input
-          id="satellite-search-input"
-          type="text"
-          className="explorer-search-input"
-          placeholder="Search satellites by name..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          autoComplete="off"
-        />
-        {searchQuery && (
-          <button
-            className="explorer-clear-btn"
-            onClick={() => setSearchQuery('')}
-            aria-label="Clear search"
-          >
-            ✕
-          </button>
-        )}
+      <div className="module-status-area">
+        <div className="status-item">
+          <span className="status-label">DATA FEED</span>
+          <span className="status-value live">● LIVE TLE</span>
+        </div>
+        <div className="status-item">
+          <span className="status-label">OBJECT DATABASE</span>
+          <span className="status-value">20K+ OBJECTS</span>
+        </div>
+      </div>
+
+      <div className="explorer-search-area">
+        <label className="search-label">CATALOG QUERY</label>
+        <div className="explorer-search-row">
+          <input
+            id="satellite-search-input"
+            type="text"
+            className="explorer-search-input"
+            placeholder="[NORAD / Satellite Name]"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoComplete="off"
+          />
+          {searchQuery && (
+            <button
+              className="explorer-clear-btn"
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {loading && (
@@ -90,17 +104,25 @@ const SatelliteExplorer = ({ onSelectSatellite }) => {
           ) : (
             <div className="explorer-results">
               {filteredResults.map((sat) => (
-                <div key={sat.norad_id} className="explorer-card">
-                  <div className="explorer-card-info">
-                    <span className="explorer-sat-name">{sat.name}</span>
-                    <span className="explorer-norad-id">NORAD #{sat.norad_id}</span>
+                <div key={sat.norad_id} className="explorer-card blueprint-card">
+                  <div className="card-data-row">
+                    <span className="data-label">OBJECT NAME</span>
+                    <span className="data-value">{sat.name}</span>
+                  </div>
+                  <div className="card-data-row">
+                    <span className="data-label">NORAD ID</span>
+                    <span className="data-value">{sat.norad_id}</span>
+                  </div>
+                  <div className="card-data-row">
+                    <span className="data-label">STATUS</span>
+                    <span className="data-value trackable">TRACKABLE</span>
                   </div>
                   <button
                     id={`track-btn-${sat.norad_id}`}
                     className="explorer-track-btn"
                     onClick={() => handleTrack(sat)}
                   >
-                    Track
+                    [TRACK OBJECT]
                   </button>
                 </div>
               ))}

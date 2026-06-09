@@ -59,7 +59,7 @@ function App() {
 
       {/* Mission Systems Section */}
       <section id="mission" className="mission-section">
-        <h2 className="section-title">Mission Systems</h2>
+        <h2 className="section-title">MISSION OPERATIONS CENTER</h2>
         <div className="systems-grid">
           <SystemCard
             title="Satellite Tracking"
@@ -82,7 +82,7 @@ function App() {
 
       {/* Dashboard Preview Section */}
       <section id="ai" className="dashboard-section">
-        <h2 className="section-title">System Status</h2>
+        <h2 className="section-title">SYSTEM TELEMETRY</h2>
         <div className="modules-grid">
           <ModuleCard title="Satellite Tracking" status={moduleStatus.satelliteTracking} />
           <ModuleCard title="Orbit Prediction" status={moduleStatus.orbitPrediction} />
@@ -97,6 +97,7 @@ function App() {
         longitude={satellitePos.longitude}
         altitude={satellitePos.altitude}
         orbitPath={orbitPath}
+        noradId={trackedNoradId}
       />
 
       {/* Satellite Explorer – search by name, click Track to predict orbit */}

@@ -2,6 +2,7 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
+import './EarthViewer.css';
 
 // Helper: convert lat/lon/alt → Vector3 (km altitude scaled)
 const latLonAltToVector3 = (latitude, longitude, altitude) => {
@@ -191,7 +192,7 @@ function SatelliteModel({ position }) {
   );
 }
 
-export default function EarthViewer({ latitude, longitude, altitude, orbitPath }) {
+export default function EarthViewer({ latitude, longitude, altitude, orbitPath, noradId }) {
   const satellitePos = useMemo(() => {
     if (latitude != null && longitude != null && altitude != null) {
       return latLonAltToVector3(latitude, longitude, altitude);
@@ -201,48 +202,93 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath }
 
   // Only show trail when we have real data (>= 2 points)
   const hasTrail = Array.isArray(orbitPath) && orbitPath.length >= 2;
+  const isTracking = latitude != null && longitude != null && altitude != null;
 
   return (
-    <div style={{ width: '100%', height: '400px', position: 'relative' }}>
-      {/* Empty state overlay when no satellite tracking data */}
-      {latitude == null && longitude == null && altitude == null && (
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          width: '100%',
-          height: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          background: 'rgba(0,0,0,0.6)',
-          color: '#fff',
-          textAlign: 'center',
-          padding: '1rem',
-          pointerEvents: 'none',
-          zIndex: 1
-        }}>
-          <h3 style={{ margin: 0, color: '#fff' }}>Tracking System Idle</h3>
-          <p style={{ margin: '0.5rem 0 0' }}>Search and track a satellite to initialize live orbital visualization.</p>
+    <div className="orbital-command-center">
+      <div className="occ-header">
+        <span className="occ-module-id">MODULE DBN-VIEWER</span>
+        <h2 className="occ-title">ORBITAL TRACKING COMMAND CENTER</h2>
+      </div>
+      
+      <div className="occ-layout">
+        {/* LEFT PANEL: OBJECT TELEMETRY */}
+        <div className="occ-panel left-panel">
+          <h3 className="occ-panel-header">OBJECT TELEMETRY</h3>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">OBJECT:</span>
+            <span className="occ-value">{noradId ? `SAT-${noradId}` : 'UNKNOWN'}</span>
+          </div>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">NORAD:</span>
+            <span className="occ-value">{noradId || 'N/A'}</span>
+          </div>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">POSITION:</span>
+            <div className="occ-pos-grid">
+              <span className="occ-pos-value">LAT: <br/>{isTracking ? Number(latitude).toFixed(4) : '---'}°</span>
+              <span className="occ-pos-value">LON: <br/>{isTracking ? Number(longitude).toFixed(4) : '---'}°</span>
+              <span className="occ-pos-value">ALT: <br/>{isTracking ? Number(altitude).toFixed(2) : '---'} KM</span>
+            </div>
+          </div>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">STATUS:</span>
+            <span className={`occ-value occ-status ${isTracking ? 'active' : ''}`}>
+              {isTracking ? 'TRACKING ACTIVE ●' : 'IDLE'}
+            </span>
+          </div>
         </div>
-      )}
-      <Canvas camera={{ position: [0, 0, 6] }} style={{ background: '#000' }}>
-        {/* Lighting */}
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[5, 5, 5]} intensity={1} />
-        {/* Scene objects */}
-        <Earth />
-        <Clouds />
-        <Atmosphere />
-        <OrbitRing />
-        {/* Predicted orbit trail – only rendered after a satellite is selected */}
-        {hasTrail && <OrbitTrail positions={orbitPath} />}
-        <SatelliteModel position={satellitePos} />
-        {/* Controls and background */}
-        <OrbitControls enableZoom />
-        <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} />
-      </Canvas>
+
+        {/* CENTER: 3D VIEWER */}
+        <div className="occ-viewer-wrapper">
+          <div className="occ-viewer-overlay top-left">FRAME: TEME</div>
+          <div className="occ-viewer-overlay top-right">PROPAGATION: SGP4</div>
+          <div className="occ-viewer-overlay bottom-left">REFERENCE: ECI</div>
+          
+          {!isTracking && (
+            <div className="occ-empty-state">
+              <h3 className="occ-empty-title">TRACKING SYSTEM IDLE</h3>
+              <p className="occ-empty-subtitle">Awaiting orbital target assignment.</p>
+            </div>
+          )}
+
+          <div className="occ-canvas-container">
+            <Canvas camera={{ position: [0, 0, 6] }} style={{ background: '#000' }}>
+              <ambientLight intensity={0.4} />
+              <directionalLight position={[5, 5, 5]} intensity={1} />
+              <Earth />
+              <Clouds />
+              <Atmosphere />
+              <OrbitRing />
+              {hasTrail && <OrbitTrail positions={orbitPath} />}
+              <SatelliteModel position={satellitePos} />
+              <OrbitControls enableZoom />
+              <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} />
+            </Canvas>
+          </div>
+        </div>
+
+        {/* RIGHT PANEL: MISSION DATA */}
+        <div className="occ-panel right-panel">
+          <h3 className="occ-panel-header">MISSION DATA</h3>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">MODEL:</span>
+            <span className="occ-value">SGP4</span>
+          </div>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">DATA:</span>
+            <span className="occ-value">LIVE TLE</span>
+          </div>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">ORBIT:</span>
+            <span className="occ-value">PREDICTED</span>
+          </div>
+          <div className="occ-telemetry-block">
+            <span className="occ-label">SYSTEM:</span>
+            <span className="occ-value occ-status active">ONLINE ●</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
