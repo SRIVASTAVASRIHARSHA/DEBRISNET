@@ -9,42 +9,57 @@ const Navbar = () => {
         {/* LEFT — Brand identity */}
         <div className="navbar-brand">
           <div className="navbar-brand-mark"></div>
-          <div className="navbar-brand-text">
-            <span className="navbar-brand-name">DEBRISNET</span>
-            <span className="navbar-brand-sub">Orbital Intelligence Platform</span>
-          </div>
+        <div className="navbar-brand-text">
+          <span className="navbar-brand-name">DEBRISNET</span>
+          <span className="navbar-brand-sub">Orbital Intelligence Platform</span>
         </div>
-
-        {/* CENTER — Mission navigation */}
-        <div className="navbar-links">
-          <button className="nav-link" onClick={() => document.getElementById("mission")?.scrollIntoView({behavior:"smooth"})}>
-            Mission
-          </button>
-          <button className="nav-link" onClick={() => document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"})}>
-            Tracking
-          </button>
-          <button className="nav-link" onClick={() => document.getElementById("conjunction")?.scrollIntoView({behavior:"smooth"})}>
-            Conjunction
-          </button>
-          <button className="nav-link" onClick={() => document.getElementById("ai")?.scrollIntoView({behavior:"smooth"})}>
-            AI Analyst
-          </button>
+        <div className="navbar-mission-id">
+          <span className="mission-label">MISSION ID:</span>
+          <span className="mission-value">DBN-OPS-01</span>
         </div>
+      </div>
 
-        {/* RIGHT — System telemetry */}
-        <div className="navbar-telemetry">
-          <div className="telemetry-item">
-            <span className="telemetry-dot"></span>
-            <span className="telemetry-label">LIVE TLE</span>
-          </div>
-          <div className="telemetry-item">
-            <span className="telemetry-label">SGP4 ACTIVE</span>
-          </div>
+      {/* CENTER — Mission navigation */}
+      <div className="navbar-links">
+        <button className="nav-link" onClick={() => document.getElementById("mission")?.scrollIntoView({behavior:"smooth"})}>
+          MISSION
+        </button>
+        <button className="nav-link" onClick={() => document.getElementById("dashboard")?.scrollIntoView({behavior:"smooth"})}>
+          TRACKING
+        </button>
+        <button className="nav-link" onClick={() => document.getElementById("ai")?.scrollIntoView({behavior:"smooth"})}>
+          ORBIT ANALYSIS
+        </button>
+        <button className="nav-link" onClick={() => document.getElementById("conjunction")?.scrollIntoView({behavior:"smooth"})}>
+          CONJUNCTION
+        </button>
+        <button className="nav-link" onClick={() => document.getElementById("reports")?.scrollIntoView({behavior:"smooth"})}>
+          REPORTS
+        </button>
+      </div>
+
+      {/* RIGHT — System telemetry */}
+      <div className="navbar-telemetry">
+        <div className="telemetry-group">
+          <span className="telemetry-group-label">SYSTEM</span>
           <div className="telemetry-item telemetry-online">
             <span className="telemetry-dot green"></span>
             <span className="telemetry-label">ONLINE</span>
           </div>
         </div>
+        <div className="telemetry-group">
+          <span className="telemetry-group-label">DATA SOURCE</span>
+          <div className="telemetry-item">
+            <span className="telemetry-label">LIVE TLE</span>
+          </div>
+        </div>
+        <div className="telemetry-group">
+          <span className="telemetry-group-label">ENGINE</span>
+          <div className="telemetry-item">
+            <span className="telemetry-label">SGP4 ACTIVE</span>
+          </div>
+        </div>
+      </div>
 
       </div>
     </nav>

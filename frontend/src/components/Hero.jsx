@@ -22,29 +22,39 @@ const Hero = () => {
         </div>
 
         <h1 className="hero-title">DEBRISNET</h1>
-        <p className="hero-subtitle">Space Situational Awareness Platform</p>
+        <p className="hero-subtitle">Space Situational Awareness System</p>
 
         <p className="hero-description">
-          Physics-based orbital propagation, real-time conjunction analysis, and
-          AI-powered mission intelligence for space debris monitoring and
-          spacecraft safety operations.
+          Real-time satellite tracking,
+          orbital propagation,
+          conjunction assessment,
+          and mission intelligence platform.
         </p>
 
         {/* ── Mission Stats ── */}
         <div className="hero-stats">
           <div className="hero-stat">
             <span className="hero-stat-value">20K+</span>
-            <span className="hero-stat-label">Tracked Objects</span>
+            <span className="hero-stat-label">TRACKED OBJECTS</span>
+            <span className="hero-stat-sub">Public orbital catalog</span>
           </div>
           <div className="hero-stat-divider"></div>
           <div className="hero-stat">
             <span className="hero-stat-value">SGP4</span>
-            <span className="hero-stat-label">Propagation Engine</span>
+            <span className="hero-stat-label">PROPAGATION ENGINE</span>
+            <span className="hero-stat-sub">Physics-based model</span>
           </div>
           <div className="hero-stat-divider"></div>
           <div className="hero-stat">
-            <span className="hero-stat-value">REAL-TIME</span>
-            <span className="hero-stat-label">Analysis Mode</span>
+            <span className="hero-stat-value">LIVE TLE</span>
+            <span className="hero-stat-label">DATA SOURCE</span>
+            <span className="hero-stat-sub">Orbital element feed</span>
+          </div>
+          <div className="hero-stat-divider"></div>
+          <div className="hero-stat">
+            <span className="hero-stat-value">ACTIVE</span>
+            <span className="hero-stat-label">MISSION STATUS</span>
+            <span className="hero-stat-sub">Monitoring enabled</span>
           </div>
         </div>
 
@@ -54,13 +64,13 @@ const Hero = () => {
             className="btn-primary"
             onClick={() => handleScroll('dashboard')}
           >
-            Initialize Mission
+            INITIALIZE MISSION
           </button>
           <button
             className="btn-secondary"
             onClick={() => handleScroll('conjunction')}
           >
-            View Analysis Console
+            OPEN ANALYSIS CONSOLE
           </button>
         </div>
       </div>
@@ -70,7 +80,7 @@ const Hero = () => {
 
         {/* Schematic label */}
         <div className="schematic-label schematic-label-top">
-          ORBITAL SCHEMATIC — LOW EARTH ORBIT
+          ORBITAL BLUEPRINT DISPLAY
         </div>
 
         {/* Axis cross-hairs */}

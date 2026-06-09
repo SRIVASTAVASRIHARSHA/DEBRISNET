@@ -89,6 +89,35 @@
   line-height: 1;
 }
 
+/* Mission ID Block */
+.navbar-mission-id {
+  display: flex;
+  flex-direction: column;
+  margin-left: 1.5rem;
+  padding-left: 1.5rem;
+  border-left: 1px solid rgba(255,255,255,0.1);
+  gap: 1px;
+}
+
+.mission-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #8FA5BB;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.mission-value {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--accent-orange);
+  line-height: 1;
+}
+
 /* ── CENTER: Navigation ── */
 .navbar-links {
   display: flex;
@@ -133,10 +162,24 @@
 .navbar-telemetry {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
   flex-shrink: 0;
   border-left: 1px solid rgba(255,255,255,0.1);
   padding-left: 1.25rem;
+}
+
+.telemetry-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.telemetry-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: #8FA5BB;
 }
 
 .telemetry-item {
