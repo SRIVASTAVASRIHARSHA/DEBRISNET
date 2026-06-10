@@ -28,19 +28,25 @@ def _fetch_raw_tle() -> str:
         return format_dat_to_tle(resp.text)
 
 def _find_tle_for_norad(tle_text: str, norad_id: int):
-    """Return (name, line1, line2) for the requested NORAD ID or raise ValueError."""
+    """Return (name, line1, line2) for the requested NORAD ID or raise ValueError.
+
+    Parses the first TLE line to extract the catalog number, handling
+    classification letters and extra spaces.
+    """
     lines = [ln.strip() for ln in tle_text.splitlines() if ln.strip()]
     for i in range(0, len(lines) - 2, 3):
         name = lines[i]
         line1 = lines[i + 1]
         line2 = lines[i + 2]
-        try:
-            raw_id = line1.split()[1]
-            current_id = int(''.join(filter(str.isdigit, raw_id)))
+        parts = line1.split()
+        if len(parts) > 1:
+            # Extract digits from the second token (catalog number) which may contain letters
+            try:
+                current_id = int(''.join(filter(str.isdigit, parts[1])))
+            except ValueError:
+                continue
             if current_id == norad_id:
                 return name, line1, line2
-        except Exception:
-            continue
     raise ValueError(f"TLE for NORAD ID {norad_id} not found")
 
 def _propagate_positions(l1: str, l2: str, start: datetime.datetime, minutes: int = 90):
