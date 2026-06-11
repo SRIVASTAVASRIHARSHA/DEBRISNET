@@ -3,6 +3,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import './EarthViewer.css';
+import EarthModel from './space/EarthModel';
+import SatelliteOrbit from './space/SatelliteOrbit';
 
 // Helper: convert lat/lon/alt → Vector3 (km altitude scaled)
 const latLonAltToVector3 = (latitude, longitude, altitude) => {
@@ -30,8 +32,8 @@ function Earth() {
       () => setDayMap(null) // onError keep null
     );
   }, []);
-  useFrame(() => {
-    if (ref.current) ref.current.rotation.y += 0.001; // slow rotation
+  useFrame((state, delta) => {
+    if (ref.current) ref.current.rotation.y += (2 * Math.PI / 86164) * delta; // sidereal rotation
   });
   return (
     <mesh ref={ref}>
@@ -256,12 +258,8 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
             <Canvas camera={{ position: [0, 0, 6] }} style={{ background: '#000' }}>
               <ambientLight intensity={0.4} />
               <directionalLight position={[5, 5, 5]} intensity={1} />
-              <Earth />
-              <Clouds />
-              <Atmosphere />
-              <OrbitRing />
-              {hasTrail && <OrbitTrail positions={orbitPath} />}
-              <SatelliteModel position={satellitePos} />
+              <EarthModel />
+              <SatelliteOrbit />
               <OrbitControls enableZoom />
               <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} />
             </Canvas>
