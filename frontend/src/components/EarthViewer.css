@@ -217,3 +217,12 @@
   left: 0;
   z-index: 1;
 }
+/* Satellite label styling */
+.sat-label {
+  font-size: 8px;
+  color: #00eaff;
+  letter-spacing: 1px;
+  opacity: 0.75;
+  background: transparent;
+  white-space: nowrap;
+}

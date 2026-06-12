@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { getSatellites } from '../services/api';
 import './SatelliteExplorer.css';
 
-const SatelliteExplorer = ({ onSelectSatellite }) => {
+const SatelliteExplorer = ({ onSelectSatellite, searchQuery, onSearchChange }) => {
   const [satellites, setSatellites] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [filteredResults, setFilteredResults] = useState([]);
   const [loading, setLoading] = useState(true);
+  // searchQuery and onSearchChange are controlled via props
   const [error, setError] = useState(null);
 
   // Fetch all satellites on mount
@@ -33,7 +33,7 @@ const SatelliteExplorer = ({ onSelectSatellite }) => {
     }
     const q = searchQuery.toLowerCase();
     const matches = satellites
-      .filter((sat) => sat.name && sat.name.toLowerCase().includes(q))
+      .filter((sat) => sat.name && sat.name.toLowerCase().startsWith(q))
       .slice(0, 20);
     setFilteredResults(matches);
   }, [searchQuery, satellites]);
@@ -71,13 +71,13 @@ const SatelliteExplorer = ({ onSelectSatellite }) => {
             className="explorer-search-input"
             placeholder="[NORAD / Satellite Name]"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => onSearchChange(e.target.value)}
             autoComplete="off"
           />
           {searchQuery && (
             <button
               className="explorer-clear-btn"
-              onClick={() => setSearchQuery('')}
+              onClick={() => onSearchChange('')}
               aria-label="Clear search"
             >
               ✕

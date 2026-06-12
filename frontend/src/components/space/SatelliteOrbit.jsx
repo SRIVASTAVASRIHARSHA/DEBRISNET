@@ -4,76 +4,149 @@ import * as THREE from 'three';
 import { featuredSatellites } from '../../data/featuredSatellites';
 import SatelliteMarker from '../SatelliteMarker';
 
-/**
- * SatelliteOrbit renders satellite markers and their orbit paths.
- * Each satellite moves according to its orbital period, inclination, and a unique phase offset.
- * The animation uses the same mission‑time acceleration as the Earth model (SIMULATION_SPEED)
- * so that speeds stay proportional.
- */
-export default function SatelliteOrbit() {
-  const groupRef = useRef();
-  const startTimeRef = useRef(Date.now());
+// ─────────────────────────────────────────────────────────────────────────────
+// MISSION TIME SCALE
+// 1 real second = 300 simulated seconds  (matches Earth sidereal rotation)
+// ─────────────────────────────────────────────────────────────────────────────
+const MISSION_TIME_SCALE = 300;
 
-  // 1 real second = 5 simulated minutes (300 seconds)
-  const SIMULATION_SPEED = 300;
 
-  useFrame(() => {
-    const elapsedSec = (Date.now() - startTimeRef.current) / 1000;
-    const missionSec = elapsedSec * SIMULATION_SPEED; // accelerated mission time
-    if (!groupRef.current) return;
 
-    featuredSatellites.forEach((sat, idx) => {
-      const periodSec = sat.periodMinutes * 60;
-      const phaseRad = THREE.MathUtils.degToRad(sat.phaseOffset ?? 0);
-      const inclRad = THREE.MathUtils.degToRad(sat.inclination);
+// ─────────────────────────────────────────────────────────────────────────────
+// CANONICAL ORBIT POSITION FUNCTION
+// Both the orbit trail AND the satellite marker use this exact function.
+// angle       – current orbital angle in radians
+// radius      – orbital radius in scene units
+// inclination – orbital inclination in DEGREES
+// Returns a THREE.Vector3 on the inclined circular orbit.
+// ─────────────────────────────────────────────────────────────────────────────
+function calculateOrbitPosition(angle, radius, inclination) {
+  const incRad = THREE.MathUtils.degToRad(inclination);
 
-      // Angle = mission time * angular speed + phase offset
-      const angle = missionSec * (2 * Math.PI / periodSec) + phaseRad;
+  // Flat orbit in XZ plane, then tilt around X-axis by inclination
+  const x = radius * Math.cos(angle);
+  const z = radius * Math.sin(angle);
 
-      const radius = 2 + sat.altitudeKm / 1000; // simple scaling relative to Earth radius
-      const x0 = radius * Math.cos(angle);
-      const z0 = radius * Math.sin(angle);
-      // Apply inclination (rotate around X axis)
-      const pos = new THREE.Vector3(x0, 0, z0).applyAxisAngle(
-        new THREE.Vector3(1, 0, 0),
-        inclRad
-      );
+  // Applying inclination by tilting: y rises/falls as satellite moves around
+  const y = z * Math.sin(incRad);
+  const zFinal = z * Math.cos(incRad);
 
-      // Marker is the child after all orbit meshes (offset by number of satellites)
-      const marker = groupRef.current.children[idx + featuredSatellites.length];
-      if (marker && marker.position) {
-        marker.position.set(pos.x, pos.y, pos.z);
-      }
-    });
+  return new THREE.Vector3(x, y, zFinal);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Build a closed TubeGeometry for the orbit trail of one satellite.
+// Uses the same calculateOrbitPosition so it matches the marker exactly.
+// ─────────────────────────────────────────────────────────────────────────────
+function buildOrbitTube(radius, inclination) {
+  const segments = 128;
+  const points = [];
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    points.push(calculateOrbitPosition(angle, radius, inclination));
+  }
+  const curve = new THREE.CatmullRomCurve3(points, true); // closed
+  return new THREE.TubeGeometry(curve, 128, 0.008, 8, true);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Per-satellite animated marker
+// Holds its own angle ref so delta-based update is accurate.
+// ─────────────────────────────────────────────────────────────────────────────
+function AnimatedSatellite({ sat, searchQuery, selectedSatellite, isSameSatellite }) {
+  const markerRef = useRef();
+  const angle = useRef(THREE.MathUtils.degToRad(sat.phaseOffset ?? 0));
+
+  const orbitalPeriod = sat.periodSeconds || (sat.periodMinutes ? sat.periodMinutes * 60 : 6000);
+  const angularVelocity = (2 * Math.PI) / orbitalPeriod;
+  const radius = 2 + sat.altitudeKm / 1000;
+
+  useFrame((state, delta) => {
+    angle.current += angularVelocity * delta * MISSION_TIME_SCALE;
+
+    const pos = calculateOrbitPosition(angle.current, radius, sat.inclination);
+
+    if (markerRef.current) {
+      markerRef.current.position.set(pos.x, pos.y, pos.z);
+    }
   });
 
+  const nameMatches = !searchQuery || sat.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+  const isTracked   = selectedSatellite && isSameSatellite(selectedSatellite, sat);
+
+  const markerOpacity = selectedSatellite ? (isTracked ? 1 : 0)    : (nameMatches ? 1    : 0.05);
+  const labelOpacity  = selectedSatellite ? (isTracked ? 1 : 0)    : (nameMatches ? 1    : 0);
+
   return (
-    <group ref={groupRef}>
-      {/* Orbit path circles – each inclined according to satellite inclination */}
+    <group ref={markerRef}>
+      <SatelliteMarker
+        position={[0, 0, 0]}
+        label={sat.name}
+        noradId={sat.noradId}
+        opacity={markerOpacity}
+        labelOpacity={labelOpacity}
+        isTracked={isTracked}
+      />
+    </group>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIN COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
+export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = null }) {
+  // Helper: safe identifier comparison
+  function isSameSatellite(a, b) {
+    return (
+      a?.noradId?.toString() === b?.noradId?.toString() ||
+      a?.noradId?.toString() === b?.id?.toString()     ||
+      a?.id?.toString()      === b?.noradId?.toString() ||
+      a?.name === b?.name
+    );
+  }
+
+  const selectedSatellite = selectedNoradId ? { noradId: selectedNoradId } : null;
+
+  return (
+    <group>
+      {/* ── Orbit trails ─────────────────────────────────────────── */}
       {featuredSatellites.map((sat) => {
-        const radius = 2 + sat.altitudeKm / 1000;
-        const inclRad = THREE.MathUtils.degToRad(sat.inclination);
+        if (selectedSatellite && !isSameSatellite(selectedSatellite, sat)) return null;
+
+        const radius      = 2 + sat.altitudeKm / 1000;
+        const tubeGeo     = buildOrbitTube(radius, sat.inclination);
+        const nameMatches = !searchQuery || sat.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+        const isTracked   = selectedSatellite && isSameSatellite(selectedSatellite, sat);
+        const opacity     = selectedSatellite
+          ? (isTracked ? 0.35 : 0)
+          : (nameMatches ? 0.22 : 0.05);
+
         return (
-          <mesh
-            key={`orbit-${sat.noradId}`}
-            rotation-x={-Math.PI / 2}
-            rotation-y={inclRad}
-          >
-            <ringGeometry args={[radius, radius + 0.01, 64]} />
-            <meshBasicMaterial color="#00eaff" transparent opacity={0.25} />
+          <mesh key={`orbit-trail-${sat.noradId}`} geometry={tubeGeo}>
+            <meshBasicMaterial
+              color="#00eaff"
+              transparent
+              opacity={opacity}
+              depthWrite={false}
+            />
           </mesh>
         );
       })}
 
-      {/* Satellite markers – positions updated each frame */}
-      {featuredSatellites.map((sat) => (
-        <SatelliteMarker
-          key={sat.noradId}
-          position={[0, 0, 0]}
-          label={sat.name}
-          noradId={sat.noradId}
-        />
-      ))}
+      {/* ── Animated satellite markers ────────────────────────────── */}
+      {featuredSatellites.map((sat) => {
+        if (selectedSatellite && !isSameSatellite(selectedSatellite, sat)) return null;
+
+        return (
+          <AnimatedSatellite
+            key={`sat-marker-${sat.noradId}`}
+            sat={sat}
+            searchQuery={searchQuery}
+            selectedSatellite={selectedSatellite}
+            isSameSatellite={isSameSatellite}
+          />
+        );
+      })}
     </group>
   );
 }

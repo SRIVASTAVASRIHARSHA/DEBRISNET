@@ -194,7 +194,7 @@ function SatelliteModel({ position }) {
   );
 }
 
-export default function EarthViewer({ latitude, longitude, altitude, orbitPath, noradId }) {
+export default function EarthViewer({ latitude, longitude, altitude, orbitPath, noradId, searchQuery = '', selectedNoradId = null }) {
   const satellitePos = useMemo(() => {
     if (latitude != null && longitude != null && altitude != null) {
       return latLonAltToVector3(latitude, longitude, altitude);
@@ -259,7 +259,7 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
               <ambientLight intensity={0.4} />
               <directionalLight position={[5, 5, 5]} intensity={1} />
               <EarthModel />
-              <SatelliteOrbit />
+              <SatelliteOrbit searchQuery={searchQuery} selectedNoradId={selectedNoradId} />
               <OrbitControls enableZoom />
               <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} />
             </Canvas>

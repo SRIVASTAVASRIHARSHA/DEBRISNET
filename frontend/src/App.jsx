@@ -24,6 +24,8 @@ function App() {
     longitude: 0,
     altitude: 0
   });
+  // Search query state for satellite filtering
+  const [searchQuery, setSearchQuery] = useState('');
 
   // NORAD ID selected via SatelliteExplorer Track button
   const [trackedNoradId, setTrackedNoradId] = useState('');
@@ -93,16 +95,22 @@ function App() {
 
       {/* Pass satellite position to EarthViewer */}
       <EarthViewer
-        latitude={satellitePos.latitude}
-        longitude={satellitePos.longitude}
-        altitude={satellitePos.altitude}
-        orbitPath={orbitPath}
-        noradId={trackedNoradId}
-      />
+          latitude={satellitePos.latitude}
+          longitude={satellitePos.longitude}
+          altitude={satellitePos.altitude}
+          orbitPath={orbitPath}
+          noradId={trackedNoradId}
+          searchQuery={searchQuery}
+          selectedNoradId={trackedNoradId}
+        />
 
       {/* Satellite Explorer – search by name, click Track to predict orbit */}
       <div id="dashboard">
-        <SatelliteExplorer onSelectSatellite={handleSelectSatellite} />
+        <SatelliteExplorer
+          onSelectSatellite={handleSelectSatellite}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
 
         {/* OrbitPanel notifies EarthViewer via callback; accepts trackedNoradId from explorer */}
         <div id="orbit">
