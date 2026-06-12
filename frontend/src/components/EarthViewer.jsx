@@ -236,9 +236,15 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
           <div className="occ-telemetry-block">
             <span className="occ-label">STATUS:</span>
             <span className={`occ-value occ-status ${isTracking ? 'active' : ''}`}>
-              {isTracking ? 'TRACKING ACTIVE ●' : 'IDLE'}
+              {isTracking ? 'TARGET ACQUIRED' : 'IDLE'}
             </span>
           </div>
+          {isTracking && (
+            <div className="occ-telemetry-block">
+              <span className="occ-label">TRACKING:</span>
+              <span className="occ-value occ-status active">ACTIVE ●</span>
+            </div>
+          )}
         </div>
 
         {/* CENTER: 3D VIEWER */}
@@ -259,7 +265,7 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
               <ambientLight intensity={0.25} />
               <directionalLight position={[5, 2, 5]} intensity={2} />
               <EarthModel />
-              <SatelliteOrbit searchQuery={searchQuery} selectedNoradId={selectedNoradId} />
+              <SatelliteOrbit searchQuery={searchQuery} selectedNoradId={selectedNoradId} altitude={altitude} />
               <OrbitControls enableZoom />
               <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} />
             </Canvas>

@@ -50,6 +50,62 @@ function buildOrbitTube(radius, inclination) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Per-satellite animated orbit
+// ─────────────────────────────────────────────────────────────────────────────
+function AnimatedOrbit({ sat, searchQuery, selectedSatellite, isSameSatellite }) {
+  const materialRef = useRef();
+
+  const radius = 2 + sat.altitudeKm / 1000;
+  const tubeGeo = React.useMemo(() => buildOrbitTube(radius, sat.inclination), [radius, sat.inclination]);
+
+  const nameMatches = sat.name.toLowerCase().includes(searchQuery.toLowerCase());
+  const isTracked   = selectedSatellite && isSameSatellite(selectedSatellite, sat);
+
+  let targetOpacity = 0.35;
+  let orbitColor = "#d96b2b";
+
+  if (selectedSatellite) {
+    if (isTracked) {
+      targetOpacity = 0.45;
+      orbitColor = "#ff9b42";
+    } else {
+      targetOpacity = 0.0;
+    }
+  } else {
+    if (nameMatches) {
+      targetOpacity = 0.35;
+    } else {
+      targetOpacity = 0.03;
+    }
+  }
+
+  useFrame(() => {
+    if (materialRef.current) {
+      const current = materialRef.current.opacity;
+      if (Math.abs(current - targetOpacity) > 0.001) {
+        materialRef.current.opacity += (targetOpacity - current) * 0.05;
+      } else {
+        materialRef.current.opacity = targetOpacity;
+      }
+      
+      materialRef.current.color.set(orbitColor);
+    }
+  });
+
+  return (
+    <mesh geometry={tubeGeo}>
+      <meshBasicMaterial
+        ref={materialRef}
+        color={orbitColor}
+        transparent
+        opacity={0.03}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Per-satellite animated marker
 // Holds its own angle ref so delta-based update is accurate.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,17 +127,41 @@ function AnimatedSatellite({ sat, searchQuery, selectedSatellite, isSameSatellit
     }
   });
 
-  const nameMatches = !searchQuery || sat.name.toLowerCase().startsWith(searchQuery.toLowerCase());
+  const nameMatches = sat.name.toLowerCase().includes(searchQuery.toLowerCase());
   const isTracked   = selectedSatellite && isSameSatellite(selectedSatellite, sat);
 
-  const markerOpacity = selectedSatellite ? (isTracked ? 1 : 0)    : (nameMatches ? 1    : 0.05);
-  const labelOpacity  = selectedSatellite ? (isTracked ? 1 : 0)    : (nameMatches ? 1    : 0);
+  let markerOpacity = 1;
+  let labelOpacity = 1;
+  
+  if (selectedSatellite) {
+    if (isTracked) {
+      markerOpacity = 1.0;
+      labelOpacity = 1.0;
+    } else {
+      markerOpacity = 0.05;
+      labelOpacity = 0.0;
+    }
+  } else {
+    if (nameMatches) {
+      markerOpacity = 1.0;
+      labelOpacity = 1.0;
+    } else {
+      markerOpacity = 0.05;
+      labelOpacity = 0.0;
+    }
+  }
+
+  const finalLabel = isTracked ? (
+    <div style={{ textAlign: 'center' }}>
+      {sat.name}<br />TARGET LOCKED
+    </div>
+  ) : sat.name;
 
   return (
     <group ref={markerRef}>
       <SatelliteMarker
         position={[0, 0, 0]}
-        label={sat.name}
+        label={finalLabel}
         noradId={sat.noradId}
         opacity={markerOpacity}
         labelOpacity={labelOpacity}
@@ -94,7 +174,7 @@ function AnimatedSatellite({ sat, searchQuery, selectedSatellite, isSameSatellit
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = null }) {
+export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = null, altitude = 400 }) {
   // Helper: safe identifier comparison
   function isSameSatellite(a, b) {
     return (
@@ -105,48 +185,56 @@ export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = nul
     );
   }
 
-  const selectedSatellite = selectedNoradId ? { noradId: selectedNoradId } : null;
+  // Find existing satellite
+  let selectedSatellite = featuredSatellites.find(
+    s => s.noradId?.toString() === selectedNoradId?.toString()
+  );
+
+  // STEP 2: NORMALIZE SEARCH DATA and create if missing
+  if (!selectedSatellite && selectedNoradId) {
+    selectedSatellite = {
+      name: searchQuery || `SAT-${selectedNoradId}`,
+      noradId: selectedNoradId,
+      altitudeKm: altitude != null ? altitude : 400,
+      inclination: 51.64, // Default fallback
+      periodSeconds: 5520, // Default fallback
+      phaseOffset: 0
+    };
+  }
+
+  // STEP 1: MERGE SELECTED SATELLITE INTO RENDER LIST
+  const visibleSatellites = selectedSatellite
+    ? [
+        ...featuredSatellites.filter(
+          sat => sat.noradId?.toString() !== selectedSatellite.noradId?.toString()
+        ),
+        selectedSatellite
+      ]
+    : featuredSatellites;
 
   return (
     <group>
       {/* ── Orbit trails ─────────────────────────────────────────── */}
-      {featuredSatellites.map((sat) => {
-        if (selectedSatellite && !isSameSatellite(selectedSatellite, sat)) return null;
-
-        const radius      = 2 + sat.altitudeKm / 1000;
-        const tubeGeo     = buildOrbitTube(radius, sat.inclination);
-        const nameMatches = !searchQuery || sat.name.toLowerCase().startsWith(searchQuery.toLowerCase());
-        const isTracked   = selectedSatellite && isSameSatellite(selectedSatellite, sat);
-        const opacity     = selectedSatellite
-          ? (isTracked ? 0.35 : 0)
-          : (nameMatches ? 0.22 : 0.05);
-
-        return (
-          <mesh key={`orbit-trail-${sat.noradId}`} geometry={tubeGeo}>
-            <meshBasicMaterial
-              color="#d96b2b"
-              transparent
-              opacity={opacity}
-              depthWrite={false}
-            />
-          </mesh>
-        );
-      })}
+      {visibleSatellites.map((sat) => (
+        <AnimatedOrbit
+          key={`orbit-trail-${sat.noradId}`}
+          sat={sat}
+          searchQuery={searchQuery}
+          selectedSatellite={selectedSatellite}
+          isSameSatellite={isSameSatellite}
+        />
+      ))}
 
       {/* ── Animated satellite markers ────────────────────────────── */}
-      {featuredSatellites.map((sat) => {
-        if (selectedSatellite && !isSameSatellite(selectedSatellite, sat)) return null;
-
-        return (
-          <AnimatedSatellite
-            key={`sat-marker-${sat.noradId}`}
-            sat={sat}
-            searchQuery={searchQuery}
-            selectedSatellite={selectedSatellite}
-            isSameSatellite={isSameSatellite}
-          />
-        );
-      })}
+      {visibleSatellites.map((sat) => (
+        <AnimatedSatellite
+          key={`sat-marker-${sat.noradId}`}
+          sat={sat}
+          searchQuery={searchQuery}
+          selectedSatellite={selectedSatellite}
+          isSameSatellite={isSameSatellite}
+        />
+      ))}
     </group>
   );
 }
