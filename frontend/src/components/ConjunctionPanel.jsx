@@ -146,14 +146,30 @@ const ConjunctionPanel = () => {
     if (result) generatePDF(result, satA, satB);
   };
 
+  // Helper to format ISO time to mission format
+  const formatMissionTime = (isoString) => {
+    if (!isoString) return 'N/A';
+    try {
+      const date = new Date(isoString);
+      const dd = String(date.getUTCDate()).padStart(2, '0');
+      const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const yyyy = date.getUTCFullYear();
+      const hh = String(date.getUTCHours()).padStart(2, '0');
+      const min = String(date.getUTCMinutes()).padStart(2, '0');
+      return `${dd}-${mm}-${yyyy} AT ${hh}:${min} UTC`;
+    } catch (e) {
+      return isoString;
+    }
+  };
+
   return (
     <div className="conjunction-panel">
       <h2 className="panel-title">CONJUNCTION INTELLIGENCE CENTER</h2>
 
-      {/* OBJECT PAIR CONFIGURATION */}
-      <div className="object-pair">
-        <div className="object-section primary">
-          <span className="object-label">PRIMARY OBJECT</span>
+      {/* OBJECT PAIR CONFIGURATION & PREDICTION WINDOW */}
+      <div className="inputs" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div className="object-section primary" style={{ flex: '1 1 200px' }}>
+          <span className="object-label" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>PRIMARY OBJECT</span>
           <input
             type="text"
             placeholder="NORAD ID"
@@ -161,14 +177,9 @@ const ConjunctionPanel = () => {
             onChange={e => setSatA(e.target.value)}
             className="object-input"
           />
-          <span className="object-status">READY</span>
         </div>
-        <div className="middle-indicator">
-          <span className="screening-label">CONJUNCTION SCREENING</span>
-          <span className="model-label">MODEL: SGP4</span>
-        </div>
-        <div className="object-section secondary">
-          <span className="object-label">SECONDARY OBJECT</span>
+        <div className="object-section secondary" style={{ flex: '1 1 200px' }}>
+          <span className="object-label" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>SECONDARY OBJECT</span>
           <input
             type="text"
             placeholder="NORAD ID"
@@ -176,36 +187,33 @@ const ConjunctionPanel = () => {
             onChange={e => setSatB(e.target.value)}
             className="object-input"
           />
-          <span className="object-status">READY</span>
         </div>
-      </div>
-      
-      {/* PREDICTION WINDOW SELECTOR */}
-      <div className="prediction-window-section" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '1.5rem', marginBottom: '1.5rem', padding: '1rem', background: 'rgba(23, 38, 53, 0.4)', border: '1px solid #ff9b42' }}>
-        <span className="object-label" style={{ marginBottom: '0.8rem', color: '#ff9b42', fontWeight: 'bold', fontSize: '0.9rem', letterSpacing: '2px' }}>PREDICTION WINDOW</span>
-        <select 
-          value={predictionHours} 
-          onChange={e => setPredictionHours(e.target.value)}
-          className="object-input"
-          style={{ width: '250px', textAlign: 'center', backgroundColor: '#0a1017', color: '#00eaff', border: '1px solid #ff9b42', fontSize: '1rem', padding: '8px' }}
-        >
-          <option value="1">1 HOUR</option>
-          <option value="6">6 HOURS</option>
-          <option value="12">12 HOURS</option>
-          <option value="24">24 HOURS</option>
-          <option value="72">72 HOURS</option>
-          <option value="Custom">CUSTOM</option>
-        </select>
-        {predictionHours === 'Custom' && (
-          <input 
-            type="number"
-            placeholder="CUSTOM HOURS"
-            value={customHours}
-            onChange={e => setCustomHours(e.target.value)}
-            className="object-input custom-hours-input"
-            style={{ width: '250px', textAlign: 'center', backgroundColor: '#0a1017', color: '#00eaff', border: '1px solid #ff9b42', marginTop: '10px', padding: '8px', fontSize: '1rem' }}
-          />
-        )}
+        <div className="object-section prediction" style={{ flex: '1 1 200px' }}>
+          <span className="object-label" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>PREDICTION WINDOW</span>
+          <select 
+            value={predictionHours} 
+            onChange={e => setPredictionHours(e.target.value)}
+            className="object-input"
+            style={{ width: '100%', padding: '0.55rem 0.75rem', border: '1.5px solid #A8ADA3', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#111827', background: '#FFFFFF' }}
+          >
+            <option value="1">1 HOUR</option>
+            <option value="6">6 HOURS</option>
+            <option value="12">12 HOURS</option>
+            <option value="24">24 HOURS</option>
+            <option value="72">72 HOURS</option>
+            <option value="Custom">CUSTOM</option>
+          </select>
+          {predictionHours === 'Custom' && (
+            <input 
+              type="number"
+              placeholder="CUSTOM WINDOW (HOURS)"
+              value={customHours}
+              onChange={e => setCustomHours(e.target.value)}
+              className="object-input"
+              style={{ marginTop: '0.5rem' }}
+            />
+          )}
+        </div>
       </div>
 
       {/* Run Analysis Button */}
@@ -213,80 +221,97 @@ const ConjunctionPanel = () => {
         className="analyze-btn"
         onClick={handleAnalyze}
         disabled={loading}
-        style={{ width: '100%', padding: '15px', fontSize: '1.1rem', letterSpacing: '2px', fontWeight: 'bold', marginTop: '10px' }}
+        style={{ marginTop: '0.5rem', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
       >
         {loading ? 'ANALYZING ORBITS...' : 'RUN CONJUNCTION ANALYSIS'}
       </button>
 
       {/* Empty idle state */}
       {!loading && !result && !error && (
-        <p className="empty-state" style={{ marginTop: '30px' }}>CONJUNCTION SYSTEM IDLE<br/>Awaiting primary and secondary orbital objects.</p>
+        <p className="empty-state" style={{ marginTop: '2rem', textAlign: 'center', color: '#777777' }}>
+          <strong>CONJUNCTION SYSTEM IDLE</strong><br/>Awaiting primary and secondary orbital objects.
+        </p>
       )}
 
       {/* Loading state */}
       {loading && (
-        <div className="calc-loading" style={{ marginTop: '30px' }}>
-          <p className="calc-title">CALCULATING CLOSE APPROACH EVENT</p>
-          <ul className="calc-steps">
+        <div className="calc-loading" style={{ marginTop: '2rem' }}>
+          <p className="calc-title" style={{ fontWeight: 'bold' }}>CALCULATING CLOSE APPROACH EVENT</p>
+          <ul className="calc-steps" style={{ listStyle: 'none', padding: 0 }}>
             {loadingMessages.map((msg, idx) => (
-              <li key={idx} className={idx <= loadingStep ? 'step-done' : ''}>{msg}</li>
+              <li key={idx} style={{ color: idx <= loadingStep ? '#C76D32' : '#C8C3B6', margin: '0.25rem 0' }}>{msg}</li>
             ))}
           </ul>
         </div>
       )}
 
       {/* Error */}
-      {error && <p className="error-msg" style={{ marginTop: '30px', color: '#ff3333', textAlign: 'center' }}>{error}</p>}
+      {error && <p className="error-msg" style={{ marginTop: '2rem', textAlign: 'center' }}>{error}</p>}
 
       {/* Result */}
       {result && (
-        <div className="result-section" style={{ marginTop: '30px' }}>
-          {/* Approach Geometry */}
-          <div className="section-box">
-            <h3 className="section-header">APPROACH GEOMETRY</h3>
-            <p style={{marginTop:'1rem', lineHeight: '1.5'}}>
-              <span style={{color:'#777'}}>Prediction Window:</span><br/>
-              <strong style={{fontSize: '1.1rem', color:'#00eaff'}}>{result.prediction_window_hours} HOURS</strong>
-            </p>
-            <p style={{marginTop:'1rem', lineHeight: '1.5'}}>
-              <span style={{color:'#777'}}>Analysis Period:</span><br/>
-              <strong style={{color:'#d96b2b'}}>{result.analysis_start}</strong><br/>
-              <span style={{color:'#555'}}>↓</span><br/>
-              <strong style={{color:'#d96b2b'}}>{result.analysis_end}</strong>
-            </p>
-            <p style={{marginTop:'1rem', lineHeight: '1.5'}}>
-              <span style={{color:'#777'}}>Closest Approach:</span><br/>
-              <strong style={{fontSize: '1.1rem', color:'#ff9b42'}}>{result.closest_approach_time}</strong>
-            </p>
-            <p style={{marginTop:'1rem', lineHeight: '1.5'}}>
-              <span style={{color:'#777'}}>Time Until Encounter:</span><br/>
-              <strong style={{fontSize: '1.2rem', color:'#ff3333'}}>{result.time_until_closest_approach}</strong>
-            </p>
-            <p style={{marginTop:'1rem', lineHeight: '1.5'}}>
-              <span style={{color:'#777'}}>Minimum Separation:</span><br/>
-              <strong style={{fontSize: '1.2rem', color:'#ff3333'}}>{result.minimum_distance_km != null ? `${Number(result.minimum_distance_km).toFixed(2)} KM` : 'N/A'}</strong>
-            </p>
+        <div className="result-section" style={{ marginTop: '2rem' }}>
+          
+          {/* Approach Geometry Grid */}
+          <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #172635' }}>
+            <h3 style={{ color: '#172635', marginBottom: '1.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>APPROACH GEOMETRY</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              <div>
+                <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>PREDICTION WINDOW</span>
+                <strong style={{color:'#172635', fontSize: '1.1rem'}}>{result.prediction_window_hours} HOURS</strong>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>ANALYSIS PERIOD</span>
+                <strong style={{color:'#172635', fontSize: '1.1rem'}}>FROM {formatMissionTime(result.analysis_start)}</strong>
+                <span style={{color:'#C76D32', margin: '0 0.5rem'}}>→</span>
+                <strong style={{color:'#172635', fontSize: '1.1rem'}}>TO {formatMissionTime(result.analysis_end)}</strong>
+              </div>
+              <div>
+                <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>CLOSEST APPROACH</span>
+                <strong style={{color:'#172635', fontSize: '1.1rem'}}>{formatMissionTime(result.closest_approach_time)}</strong>
+              </div>
+              <div>
+                <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>TIME UNTIL ENCOUNTER</span>
+                <strong style={{color:'#172635', fontSize: '1.1rem'}}>{result.time_until_closest_approach.toUpperCase()}</strong>
+              </div>
+              <div>
+                <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>MINIMUM SEPARATION</span>
+                <strong style={{color:'#172635', fontSize: '1.1rem'}}>{result.minimum_distance_km != null ? `${Number(result.minimum_distance_km).toFixed(2)} KM` : 'N/A'}</strong>
+              </div>
+            </div>
           </div>
 
           {/* Collision Risk Classification */}
-          <div className="card risk-card" style={{ marginTop: '20px' }}>
-            <h3 className="card-title">COLLISION RISK CLASSIFICATION</h3>
-            {['LOW', 'MEDIUM', 'HIGH'].map(level => (
-              <div className="risk-bar" key={level}>
-                <span className="risk-label">{level}</span>
-                <span className={`risk-level ${result.risk_level?.toUpperCase() === level ? 'active' : ''}`} style={result.risk_level?.toUpperCase() === level ? { backgroundColor: level === 'HIGH' ? '#ff3333' : level === 'MEDIUM' ? '#ff9b42' : '#00eaff', opacity: 1, boxShadow: '0 0 10px currentColor' } : { opacity: 0.1 }}></span>
-              </div>
-            ))}
+          <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem' }}>
+            <h3 style={{ color: '#172635', marginBottom: '1rem', fontSize: '1rem', letterSpacing: '0.05em' }}>COLLISION RISK CLASSIFICATION</h3>
+            <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              {['LOW', 'MEDIUM', 'HIGH'].map(level => {
+                const isActive = result.risk_level?.toUpperCase() === level;
+                let activeColor = '#C76D32'; // Default orange accent
+                if (level === 'HIGH') activeColor = '#A94438'; // Red only if HIGH
+                if (level === 'LOW') activeColor = '#172635'; // Dark navy for LOW
+                return (
+                  <div key={level} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isActive ? 1 : 0.4 }}>
+                    <span style={{ fontSize: '1.5rem', color: isActive ? activeColor : '#C8C3B6' }}>
+                      {isActive ? '●' : '○'}
+                    </span>
+                    <strong style={{ color: isActive ? activeColor : '#777777', fontSize: '1.1rem' }}>{level}</strong>
+                  </div>
+                );
+              })}
+            </div>
           </div>
           
           {/* Autonomous Recommendation */}
-          <div className="card risk-status-card" style={{ marginTop: '20px', padding: '20px', borderLeft: '4px solid #ff9b42', backgroundColor: 'rgba(23, 38, 53, 0.4)' }}>
-            <h3 className="card-title">AUTONOMOUS RECOMMENDATION</h3>
-            <p className="recommendation-text" style={{ color: '#00eaff', fontSize: '1.1rem', marginTop: '10px', lineHeight: '1.6' }}>{result.recommendation}</p>
+          <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem', borderLeft: '4px solid #C76D32' }}>
+            <h3 style={{ color: '#C76D32', marginBottom: '0.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>AUTONOMOUS RECOMMENDATION</h3>
+            <p style={{ color: '#172635', fontSize: '1.1rem', margin: 0, fontWeight: '500' }}>{result.recommendation}</p>
           </div>
 
           {/* Export button */}
-          <button className="export-btn" onClick={handleExport} style={{marginTop: '30px', width: '100%', padding: '15px'}}>EXPORT MISSION REPORT</button>
+          <button className="export-btn" onClick={handleExport} style={{marginTop: '2rem', width: '100%'}}>
+            EXPORT MISSION REPORT
+          </button>
         </div>
       )}
     </div>
