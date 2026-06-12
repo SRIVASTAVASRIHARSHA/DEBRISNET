@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { jsPDF } from "jspdf";
 import { analyzeConjunction } from '../services/api';
+import { formatUTC, formatOperatorTime, formatReportTime } from '../utils/timeFormatter';
 import './ConjunctionPanel.css';
 
 // ==================== PDF Generator ====================
-const generatePDF = (result, satA, satB) => {
+const generatePDF = (result, satA, satB, timeReference, localTimeZone) => {
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
   const pageHeight = doc.internal.pageSize.height;
   const pageWidth = doc.internal.pageSize.width;
@@ -42,19 +43,40 @@ const generatePDF = (result, satA, satB) => {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     entries.forEach(entry => {
-      doc.text(`${entry.key}: ${entry.value}`, margin, lineY);
-      lineY += 15;
+      if (entry.multiline) {
+        doc.text(`${entry.key}:`, margin, lineY);
+        lineY += 12;
+        entry.value.forEach(val => {
+          doc.text(`  ${val}`, margin, lineY);
+          lineY += 12;
+        });
+        lineY += 3; // padding
+      } else {
+        doc.text(`${entry.key}: ${entry.value}`, margin, lineY);
+        lineY += 15;
+      }
     });
     y = lineY + 10;
   };
 
+  // Temporal Reference
+  const isLocal = timeReference === 'UTC + OPERATOR TIME';
+  const temporalEntries = [
+    { key: 'Calculation Standard', value: 'UTC' }
+  ];
+  if (isLocal) {
+    temporalEntries.push({ key: 'Operator Timezone', value: `${localTimeZone}` });
+  }
+  temporalEntries.push({ key: 'Prediction Window', value: `${result.prediction_window_hours} HOURS` });
+
   // Mission Details
   drawSection('MISSION DETAILS', [
     { key: 'Report ID', value: `DBN-${Date.now()}` },
-    { key: 'Generated Time', value: new Date().toUTCString() },
+    { key: 'Generated Time', value: formatReportTime(new Date(), localTimeZone, true) },
     { key: 'Analysis Model', value: 'SGP4 Future Forecasting' },
-    { key: 'Prediction Window', value: `${result.prediction_window_hours} HOURS` },
   ]);
+
+  drawSection('TEMPORAL REFERENCE', temporalEntries);
 
   // Object Pair
   drawSection('OBJECT PAIR', [
@@ -63,14 +85,26 @@ const generatePDF = (result, satA, satB) => {
   ]);
 
   // Approach Analysis
-  drawSection('APPROACH ANALYSIS', [
-    { key: 'Analysis Start (UTC)', value: result.analysis_start || 'N/A' },
-    { key: 'Analysis End (UTC)', value: result.analysis_end || 'N/A' },
-    { key: 'Closest Approach Time (UTC)', value: result.closest_approach_time || 'N/A' },
-    { key: 'Time Until Encounter', value: result.time_until_closest_approach || 'N/A' },
+  const approachEntries = [
     { key: 'Minimum Separation', value: result.minimum_distance_km != null ? `${Number(result.minimum_distance_km).toFixed(3)} km` : 'N/A' },
     { key: 'Risk Status', value: result.risk_level?.toUpperCase() || 'N/A' },
-  ]);
+    { key: 'Time Until Encounter', value: result.time_until_closest_approach || 'N/A' }
+  ];
+  
+  if (isLocal) {
+    approachEntries.push({
+      key: 'Closest Approach',
+      multiline: true,
+      value: [
+        `UTC: ${formatReportTime(result.closest_approach_time, localTimeZone, true)}`,
+        `Operator: ${formatReportTime(result.closest_approach_time, localTimeZone, false)}`
+      ]
+    });
+  } else {
+    approachEntries.push({ key: 'Closest Approach', value: `UTC: ${formatReportTime(result.closest_approach_time, localTimeZone, true)}` });
+  }
+
+  drawSection('APPROACH ANALYSIS', approachEntries);
 
   // Command Decision
   drawSection('COMMAND DECISION', [
@@ -91,6 +125,13 @@ const ConjunctionPanel = () => {
   const [predictionHours, setPredictionHours] = useState('24');
   const [customHours, setCustomHours] = useState('');
   
+  const [timeReference, setTimeReference] = useState('UTC ONLY');
+  const [operatorZoneMode, setOperatorZoneMode] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  );
+  const [customTimeZone, setCustomTimeZone] = useState('');
+  const [timeZoneError, setTimeZoneError] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState(0);
   const loadingMessages = [
@@ -115,6 +156,24 @@ const ConjunctionPanel = () => {
 
   const getHours = () => predictionHours === 'Custom' ? Number(customHours) : Number(predictionHours);
 
+  // Validate custom timezone string
+  useEffect(() => {
+    if (timeReference === 'UTC + OPERATOR TIME' && operatorZoneMode === 'CUSTOM TIMEZONE') {
+      try {
+        new Intl.DateTimeFormat("en-US", { timeZone: customTimeZone });
+        setTimeZoneError(false);
+      } catch (e) {
+        setTimeZoneError(true);
+      }
+    } else {
+      setTimeZoneError(false);
+    }
+  }, [timeReference, operatorZoneMode, customTimeZone]);
+
+  const getEffectiveTimeZone = () => {
+    return operatorZoneMode === 'CUSTOM TIMEZONE' ? customTimeZone : operatorZoneMode;
+  };
+
   const handleAnalyze = async () => {
     if (!validateId(satA) || !validateId(satB)) {
       setError('Enter valid NORAD IDs (numeric, ≤6 digits).');
@@ -125,6 +184,11 @@ const ConjunctionPanel = () => {
       setError('Enter a valid prediction window in hours.');
       return;
     }
+    if (timeZoneError) {
+      setError('Resolve timezone error before analyzing.');
+      return;
+    }
+
     setError(null);
     setLoading(true);
     setResult(null);
@@ -143,30 +207,16 @@ const ConjunctionPanel = () => {
   };
 
   const handleExport = () => {
-    if (result) generatePDF(result, satA, satB);
+    if (result) generatePDF(result, satA, satB, timeReference, getEffectiveTimeZone());
   };
 
-  // Helper to format ISO time to mission format
-  const formatMissionTime = (isoString) => {
-    if (!isoString) return 'N/A';
-    try {
-      const date = new Date(isoString);
-      const dd = String(date.getUTCDate()).padStart(2, '0');
-      const mm = String(date.getUTCMonth() + 1).padStart(2, '0');
-      const yyyy = date.getUTCFullYear();
-      const hh = String(date.getUTCHours()).padStart(2, '0');
-      const min = String(date.getUTCMinutes()).padStart(2, '0');
-      return `${dd}-${mm}-${yyyy} AT ${hh}:${min} UTC`;
-    } catch (e) {
-      return isoString;
-    }
-  };
+  const isLocal = timeReference === 'UTC + OPERATOR TIME';
+  const effectiveTz = getEffectiveTimeZone();
 
   return (
     <div className="conjunction-panel">
       <h2 className="panel-title">CONJUNCTION INTELLIGENCE CENTER</h2>
 
-      {/* OBJECT PAIR CONFIGURATION & PREDICTION WINDOW */}
       <div className="inputs" style={{ display: 'flex', flexDirection: 'row', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
         <div className="object-section primary" style={{ flex: '1 1 200px' }}>
           <span className="object-label" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>PRIMARY OBJECT</span>
@@ -214,26 +264,82 @@ const ConjunctionPanel = () => {
             />
           )}
         </div>
+        
+        {/* TIME REFERENCE */}
+        <div className="object-section temporal" style={{ flex: '1 1 200px' }}>
+          <span className="object-label" style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>TIME REFERENCE</span>
+          <select 
+            value={timeReference} 
+            onChange={e => setTimeReference(e.target.value)}
+            className="object-input"
+            style={{ width: '100%', padding: '0.55rem 0.75rem', border: '1.5px solid #A8ADA3', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#111827', background: '#FFFFFF' }}
+          >
+            <option value="UTC ONLY">UTC ONLY</option>
+            <option value="UTC + OPERATOR TIME">UTC + OPERATOR TIME</option>
+          </select>
+          {isLocal && operatorZoneMode !== 'CUSTOM TIMEZONE' && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <span className="object-label" style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>OPERATOR TIMEZONE</span>
+              <select 
+                value={operatorZoneMode}
+                onChange={e => setOperatorZoneMode(e.target.value)}
+                className="object-input"
+                style={{ width: '100%', padding: '0.55rem 0.75rem', border: '1.5px solid #A8ADA3', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#111827', background: '#FFFFFF' }}
+              >
+                <option value="UTC">UTC</option>
+                <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                <option value="America/New_York">America/New_York (EST/EDT)</option>
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Europe/Paris">Europe/Paris</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+                <option value="Australia/Sydney">Australia/Sydney</option>
+                <option value="CUSTOM TIMEZONE">CUSTOM TIMEZONE</option>
+              </select>
+            </div>
+          )}
+          {isLocal && operatorZoneMode === 'CUSTOM TIMEZONE' && (
+            <div style={{ marginTop: '0.5rem' }}>
+              <span className="object-label" style={{ display: 'block', fontSize: '0.65rem', fontWeight: 700, color: '#777777', marginBottom: '0.25rem' }}>ENTER IANA TIMEZONE</span>
+              <input 
+                type="text"
+                placeholder="America/Chicago"
+                value={customTimeZone}
+                onChange={e => setCustomTimeZone(e.target.value)}
+                className="object-input"
+                style={{ width: '100%', padding: '0.55rem 0.75rem', border: '1.5px solid #A8ADA3', borderRadius: '2px', fontFamily: 'var(--font-mono)', fontSize: '0.9rem', color: '#111827', background: '#FFFFFF' }}
+              />
+              <button 
+                onClick={() => setOperatorZoneMode('UTC')}
+                style={{ background: 'none', border: 'none', color: '#C76D32', fontSize: '0.7rem', padding: 0, marginTop: '0.25rem', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Cancel Custom
+              </button>
+              {timeZoneError && (
+                <div style={{ marginTop: '0.25rem', color: '#C76D32', fontSize: '0.7rem', fontWeight: 'bold' }}>
+                  INVALID TIMEZONE FORMAT
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Run Analysis Button */}
       <button
         className="analyze-btn"
         onClick={handleAnalyze}
-        disabled={loading}
+        disabled={loading || timeZoneError}
         style={{ marginTop: '0.5rem', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
       >
         {loading ? 'ANALYZING ORBITS...' : 'RUN CONJUNCTION ANALYSIS'}
       </button>
 
-      {/* Empty idle state */}
       {!loading && !result && !error && (
         <p className="empty-state" style={{ marginTop: '2rem', textAlign: 'center', color: '#777777' }}>
           <strong>CONJUNCTION SYSTEM IDLE</strong><br/>Awaiting primary and secondary orbital objects.
         </p>
       )}
 
-      {/* Loading state */}
       {loading && (
         <div className="calc-loading" style={{ marginTop: '2rem' }}>
           <p className="calc-title" style={{ fontWeight: 'bold' }}>CALCULATING CLOSE APPROACH EVENT</p>
@@ -245,31 +351,53 @@ const ConjunctionPanel = () => {
         </div>
       )}
 
-      {/* Error */}
       {error && <p className="error-msg" style={{ marginTop: '2rem', textAlign: 'center' }}>{error}</p>}
 
-      {/* Result */}
       {result && (
         <div className="result-section" style={{ marginTop: '2rem' }}>
           
-          {/* Approach Geometry Grid */}
           <div className="card" style={{ padding: '1.5rem', borderLeft: '4px solid #172635' }}>
             <h3 style={{ color: '#172635', marginBottom: '1.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>APPROACH GEOMETRY</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
-              <div>
-                <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>PREDICTION WINDOW</span>
-                <strong style={{color:'#172635', fontSize: '1.1rem'}}>{result.prediction_window_hours} HOURS</strong>
-              </div>
+              
               <div style={{ gridColumn: '1 / -1' }}>
                 <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>ANALYSIS PERIOD</span>
-                <strong style={{color:'#172635', fontSize: '1.1rem'}}>FROM {formatMissionTime(result.analysis_start)}</strong>
-                <span style={{color:'#C76D32', margin: '0 0.5rem'}}>→</span>
-                <strong style={{color:'#172635', fontSize: '1.1rem'}}>TO {formatMissionTime(result.analysis_end)}</strong>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  <div>
+                    <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.1rem'}}>UTC REFERENCE</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                      <strong style={{color:'#172635', fontSize: '1.1rem'}}>FROM: {formatUTC(result.analysis_start)}</strong>
+                      <strong style={{color:'#172635', fontSize: '1.1rem'}}>TO: {formatUTC(result.analysis_end)}</strong>
+                    </div>
+                  </div>
+                  {isLocal && (
+                    <div>
+                      <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.1rem'}}>OPERATOR TIME <span style={{ color: '#C76D32' }}>{effectiveTz}</span></span>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+                        <strong style={{color:'#172635', fontSize: '1.1rem'}}>FROM: {formatOperatorTime(result.analysis_start, effectiveTz)}</strong>
+                        <strong style={{color:'#172635', fontSize: '1.1rem'}}>TO: {formatOperatorTime(result.analysis_end, effectiveTz)}</strong>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
+
               <div>
                 <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>CLOSEST APPROACH</span>
-                <strong style={{color:'#172635', fontSize: '1.1rem'}}>{formatMissionTime(result.closest_approach_time)}</strong>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                  <div>
+                    <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block'}}>UTC:</span>
+                    <strong style={{color:'#172635', fontSize: '1.1rem'}}>{formatUTC(result.closest_approach_time)}</strong>
+                  </div>
+                  {isLocal && (
+                    <div>
+                      <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginTop: '0.5rem'}}>OPERATOR:</span>
+                      <strong style={{color:'#172635', fontSize: '1.1rem'}}>{formatOperatorTime(result.closest_approach_time, effectiveTz)}</strong>
+                    </div>
+                  )}
+                </div>
               </div>
+              
               <div>
                 <span style={{color:'#777777', fontSize: '0.75rem', fontWeight: 'bold', display: 'block', marginBottom: '0.25rem'}}>TIME UNTIL ENCOUNTER</span>
                 <strong style={{color:'#172635', fontSize: '1.1rem'}}>{result.time_until_closest_approach.toUpperCase()}</strong>
@@ -281,15 +409,14 @@ const ConjunctionPanel = () => {
             </div>
           </div>
 
-          {/* Collision Risk Classification */}
           <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem' }}>
             <h3 style={{ color: '#172635', marginBottom: '1rem', fontSize: '1rem', letterSpacing: '0.05em' }}>COLLISION RISK CLASSIFICATION</h3>
             <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
               {['LOW', 'MEDIUM', 'HIGH'].map(level => {
                 const isActive = result.risk_level?.toUpperCase() === level;
-                let activeColor = '#C76D32'; // Default orange accent
-                if (level === 'HIGH') activeColor = '#A94438'; // Red only if HIGH
-                if (level === 'LOW') activeColor = '#172635'; // Dark navy for LOW
+                let activeColor = '#C76D32';
+                if (level === 'HIGH') activeColor = '#A94438';
+                if (level === 'LOW') activeColor = '#172635';
                 return (
                   <div key={level} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', opacity: isActive ? 1 : 0.4 }}>
                     <span style={{ fontSize: '1.5rem', color: isActive ? activeColor : '#C8C3B6' }}>
@@ -302,13 +429,11 @@ const ConjunctionPanel = () => {
             </div>
           </div>
           
-          {/* Autonomous Recommendation */}
           <div className="card" style={{ marginTop: '1.5rem', padding: '1.5rem', borderLeft: '4px solid #C76D32' }}>
             <h3 style={{ color: '#C76D32', marginBottom: '0.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>AUTONOMOUS RECOMMENDATION</h3>
             <p style={{ color: '#172635', fontSize: '1.1rem', margin: 0, fontWeight: '500' }}>{result.recommendation}</p>
           </div>
 
-          {/* Export button */}
           <button className="export-btn" onClick={handleExport} style={{marginTop: '2rem', width: '100%'}}>
             EXPORT MISSION REPORT
           </button>
