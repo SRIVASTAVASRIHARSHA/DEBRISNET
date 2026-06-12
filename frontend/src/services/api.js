@@ -42,9 +42,19 @@ export const getOrbitPrediction = async (noradId) => {
     }
 };
 
-export const analyzeConjunction = async (idA, idB) => {
+export const analyzeConjunction = async (idA, idB, predictionHours = 24) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/conjunction/${idA}/${idB}`);
+        const response = await fetch(`${API_BASE_URL}/api/conjunction`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                primary_id: Number(idA),
+                secondary_id: Number(idB),
+                prediction_hours: Number(predictionHours)
+            })
+        });
         if (!response.ok) throw new Error('Conjunction analysis failed');
         return await response.json();
     } catch (error) {
