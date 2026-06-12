@@ -256,8 +256,8 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
 
           <div className="occ-canvas-container">
             <Canvas camera={{ position: [0, 0, 6] }} style={{ background: '#000' }}>
-              <ambientLight intensity={0.4} />
-              <directionalLight position={[5, 5, 5]} intensity={1} />
+              <ambientLight intensity={0.25} />
+              <directionalLight position={[5, 2, 5]} intensity={2} />
               <EarthModel />
               <SatelliteOrbit searchQuery={searchQuery} selectedNoradId={selectedNoradId} />
               <OrbitControls enableZoom />

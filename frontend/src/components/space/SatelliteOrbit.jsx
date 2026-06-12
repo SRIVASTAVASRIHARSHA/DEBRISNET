@@ -124,7 +124,7 @@ export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = nul
         return (
           <mesh key={`orbit-trail-${sat.noradId}`} geometry={tubeGeo}>
             <meshBasicMaterial
-              color="#00eaff"
+              color="#d96b2b"
               transparent
               opacity={opacity}
               depthWrite={false}

@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 
 /**
- * SatelliteMarker renders a small glowing sphere for a satellite and a minimal HUD label.
+ * SatelliteMarker renders a tiny satellite representation and a minimal HUD label.
  */
 const SatelliteMarker = ({
   position,
@@ -15,62 +15,104 @@ const SatelliteMarker = ({
   labelOpacity = 1,
   isTracked = false,
 }) => {
-  const sphereColor = isSelected ? '#ffcc00' : '#00eaff';
-  const meshRef = React.useRef();
-  const materialRef = React.useRef();
+  const bodyColor = isSelected ? '#ff9b42' : '#d96b2b';
+  const groupRef = useRef();
+  const bodyMatRef = useRef();
+  const panelMatRef1 = useRef();
+  const panelMatRef2 = useRef();
 
   // Apply size and emissive intensity for tracked satellite
-  React.useEffect(() => {
-    if (meshRef.current) {
-      const scale = isTracked ? 1.3 : 1.0;
-      meshRef.current.scale.set(scale, scale, scale);
+  useEffect(() => {
+    if (groupRef.current) {
+      const scale = isTracked ? 0.12 : 0.08;
+      groupRef.current.scale.set(scale, scale, scale);
     }
-    if (materialRef.current) {
-      materialRef.current.emissiveIntensity = isTracked ? 2 : 1;
+    if (bodyMatRef.current) {
+      bodyMatRef.current.emissiveIntensity = isTracked ? 1.0 : 0.6;
     }
   }, [isTracked]);
 
-  // Lerp opacity for smooth fade (500ms approx)
-  useFrame((state, delta) => {
-    if (materialRef.current) {
-      const current = materialRef.current.opacity;
-      const target = opacity;
-      const lerp = 0.1; // adjust for speed (0.1 per frame ~ 500ms)
-      if (Math.abs(current - target) > 0.01) {
-        materialRef.current.opacity = current + (target - current) * lerp;
-      } else {
-        materialRef.current.opacity = target;
-      }
+  // Lerp opacity for smooth fade and face camera
+  useFrame((state) => {
+    if (groupRef.current) {
+      groupRef.current.lookAt(state.camera.position);
     }
+    
+    const target = opacity;
+    const lerp = 0.1; // adjust for speed (0.1 per frame ~ 500ms)
+    
+    [bodyMatRef, panelMatRef1, panelMatRef2].forEach(ref => {
+      if (ref.current) {
+        const current = ref.current.opacity;
+        if (Math.abs(current - target) > 0.01) {
+          ref.current.opacity = current + (target - current) * lerp;
+        } else {
+          ref.current.opacity = target;
+        }
+      }
+    });
   });
 
   return (
-    <mesh
-      ref={meshRef}
+    <group
+      ref={groupRef}
       position={position}
       onClick={() => onClick && onClick(noradId)}
+      scale={[0.08, 0.08, 0.08]}
     >
-      {/* Small sphere – radius limited to 0.03 */}
-        <sphereGeometry args={[0.035, 8, 8]} />
-        <meshStandardMaterial ref={materialRef} color={sphereColor} emissive="#00eaff" transparent={true} opacity={opacity} />
-        {/* HUD label using Drei Html */}
-        <Html
-          center
-          sprite
-          distanceFactor={8}
-          style={{
-            fontSize: "8px",
-            color: "#00eaff",
-            opacity: labelOpacity,
-            whiteSpace: "nowrap",
-            pointerEvents: "none",
-            transition: "opacity 0.5s",
-          }}
-          className="sat-label"
-        >
-          {label}
-        </Html>
-    </mesh>
+      {/* Center body */}
+      <mesh>
+        <boxGeometry args={[0.4, 0.4, 0.4]} />
+        <meshStandardMaterial 
+          ref={bodyMatRef} 
+          color={bodyColor} 
+          emissive="#d96b2b" 
+          emissiveIntensity={0.6} 
+          transparent={true} 
+          opacity={opacity} 
+        />
+      </mesh>
+      
+      {/* Left solar panel */}
+      <mesh position={[-0.6, 0, 0]}>
+        <boxGeometry args={[0.8, 0.05, 0.3]} />
+        <meshStandardMaterial 
+          ref={panelMatRef1} 
+          color="#8a3f18" 
+          transparent={true} 
+          opacity={opacity} 
+        />
+      </mesh>
+      
+      {/* Right solar panel */}
+      <mesh position={[0.6, 0, 0]}>
+        <boxGeometry args={[0.8, 0.05, 0.3]} />
+        <meshStandardMaterial 
+          ref={panelMatRef2} 
+          color="#8a3f18" 
+          transparent={true} 
+          opacity={opacity} 
+        />
+      </mesh>
+
+      {/* HUD label using Drei Html */}
+      <Html
+        center
+        sprite
+        distanceFactor={8}
+        style={{
+          fontSize: "8px",
+          color: "#d96b2b",
+          opacity: labelOpacity,
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+          transition: "opacity 0.5s",
+        }}
+        className="sat-label"
+      >
+        {label}
+      </Html>
+    </group>
   );
 };
 

@@ -16,6 +16,16 @@ export default function EarthModel() {
 const EARTH_ROTATION_RATE = 7.2921159e-5; // radians per second (sidereal)
 const SIMULATION_SPEED = 300; // 1 real second = 5 simulated minutes
 
+// Earth starts using UTC based sidereal orientation.
+// Mission-time acceleration begins after initialization.
+React.useEffect(() => {
+  if (earthGroup.current) {
+    const utcSeconds = Date.now() / 1000;
+    const realEarthAngle = utcSeconds * EARTH_ROTATION_RATE;
+    earthGroup.current.rotation.y = realEarthAngle;
+  }
+}, []);
+
 // DebrisNet uses accelerated mission time. Orbital physics remain proportional while allowing human‑visible visualization.
 // Rotate Earth – accelerated real‑time rotation
 useFrame((_, delta) => {
@@ -29,13 +39,13 @@ useFrame((_, delta) => {
       {/* Earth sphere */}
       <mesh ref={earthRef}>
         <sphereGeometry args={[2, 64, 64]} />
-        <meshStandardMaterial map={dayTexture} />
+        <meshStandardMaterial map={dayTexture} roughness={0.8} metalness={0} emissive="#000022" emissiveIntensity={0.05} />
       </mesh>
 
       {/* Cloud layer – slightly larger, semi‑transparent */}
       <mesh ref={cloudsRef}>
         <sphereGeometry args={[2.05, 64, 64]} />
-        <meshStandardMaterial map={cloudTexture} transparent opacity={0.4} depthWrite={false} />
+        <meshStandardMaterial map={cloudTexture} transparent opacity={0.25} depthWrite={false} />
       </mesh>
 
       {/* Atmospheric glow – subtle outer shell */}
