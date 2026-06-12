@@ -139,6 +139,24 @@ def get_orbit(norad_id: int):
     """
     return get_orbit_prediction(norad_id)
 
+from pydantic import BaseModel
+
+class ConjunctionRequest(BaseModel):
+    primary_id: int
+    secondary_id: int
+    prediction_hours: int = 24
+
+@app.post("/api/conjunction")
+def post_conjunction(req: ConjunctionRequest):
+    """
+    Analyze the future conjunction (closest approach) between two satellites over a prediction window.
+    """
+    try:
+        from conjunction_service import analyze_future_conjunction
+        return analyze_future_conjunction(req.primary_id, req.secondary_id, req.prediction_hours)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/conjunction/{satellite_a}/{satellite_b}")
 def get_conjunction(satellite_a: int, satellite_b: int):
     """

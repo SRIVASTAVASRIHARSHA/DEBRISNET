@@ -138,6 +138,73 @@ def geodetic_to_ecef(lat_deg: float, lon_deg: float, alt_km: float) -> tuple[flo
     return x, y, z
 
 
+def analyze_future_conjunction(primary_id: int, secondary_id: int, prediction_hours: int = 24) -> dict[str, Any]:
+    from orbit_service import _fetch_raw_tle, _find_tle_for_norad, _propagate_positions
+    import datetime
+    from datetime import timezone
+    
+    raw_tle = _fetch_raw_tle()
+    name_a, l1_a, l2_a = _find_tle_for_norad(raw_tle, primary_id)
+    name_b, l1_b, l2_b = _find_tle_for_norad(raw_tle, secondary_id)
+    
+    start_time = datetime.datetime.now(timezone.utc)
+    
+    if prediction_hours <= 24:
+        step_seconds = 60
+    elif prediction_hours <= 72:
+        step_seconds = 300
+    else:
+        step_seconds = 900
+        
+    pos_a = _propagate_positions(l1_a, l2_a, start_time, minutes=prediction_hours*60, step_seconds=step_seconds)
+    pos_b = _propagate_positions(l1_b, l2_b, start_time, minutes=prediction_hours*60, step_seconds=step_seconds)
+    
+    orbit_a_formatted = []
+    for t, lat, lon, alt in pos_a:
+        x, y, z = geodetic_to_ecef(lat, lon, alt)
+        orbit_a_formatted.append({"timestamp": t, "x": x, "y": y, "z": z})
+        
+    orbit_b_formatted = []
+    for t, lat, lon, alt in pos_b:
+        x, y, z = geodetic_to_ecef(lat, lon, alt)
+        orbit_b_formatted.append({"timestamp": t, "x": x, "y": y, "z": z})
+        
+    result = find_closest_approach(orbit_a_formatted, orbit_b_formatted)
+    
+    min_dist = result["minimum_distance_km"]
+    closest_time_str = result["closest_time"]
+    
+    if min_dist < 1:
+        risk_level = "HIGH"
+        recommendation = "Initiate immediate collision avoidance maneuvers."
+    elif min_dist <= 5:
+        risk_level = "MEDIUM"
+        recommendation = "Heightened alert. Prepare potential maneuver."
+    else:
+        risk_level = "LOW"
+        recommendation = "Continue monitoring."
+        
+    closest_dt = datetime.datetime.fromisoformat(closest_time_str)
+    delta = closest_dt - start_time
+    total_seconds = int(delta.total_seconds())
+    hours = total_seconds // 3600
+    minutes = (total_seconds % 3600) // 60
+    time_until = f"{hours}h {minutes}m"
+    
+    end_time = start_time + datetime.timedelta(hours=prediction_hours)
+    
+    return {
+        "prediction_window_hours": prediction_hours,
+        "analysis_start": start_time.isoformat(),
+        "analysis_end": end_time.isoformat(),
+        "closest_approach_time": closest_time_str,
+        "time_until_closest_approach": time_until,
+        "minimum_distance_km": min_dist,
+        "risk_level": risk_level,
+        "recommendation": recommendation
+    }
+
+
 def analyze_conjunction(satellite_a_id: int, satellite_b_id: int) -> dict[str, Any]:
     """
     Fetch future positions for two satellites and calculate their closest approach.
