@@ -145,14 +145,18 @@ class ConjunctionRequest(BaseModel):
     primary_id: int
     secondary_id: int
     prediction_hours: int = 24
+    timezone: str = "UTC"
 
 @app.post("/api/conjunction")
-def post_conjunction(req: ConjunctionRequest):
+async def post_conjunction(req: ConjunctionRequest):
     """
-    Analyze the future conjunction (closest approach) between two satellites over a prediction window.
+    Analyze the future conjunction between two satellites.
     """
+    # Log incoming request for debugging
+    print("Conjunction request received:", req.dict())
     try:
         from conjunction_service import analyze_future_conjunction
+        # Pass timezone if needed; currently not used in backend logic
         return analyze_future_conjunction(req.primary_id, req.secondary_id, req.prediction_hours)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -173,3 +177,13 @@ def get_conjunction(satellite_a: int, satellite_b: int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@app.get("/api/status")
+def get_status():
+    return {
+        "modules": [
+            {"name": "SYSTEM", "status": "ONLINE"},
+            {"name": "DATA SOURCE", "status": "LIVE TLE"},
+            {"name": "ENGINE", "status": "SGP4 ACTIVE"}
+        ]
+    }

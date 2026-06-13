@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import './EarthViewer.css';
 import EarthModel from './space/EarthModel';
 import SatelliteOrbit from './space/SatelliteOrbit';
+import ConjunctionSimulation from './space/ConjunctionSimulation';
 
 // Helper: convert lat/lon/alt → Vector3 (km altitude scaled)
 const latLonAltToVector3 = (latitude, longitude, altitude) => {
@@ -194,7 +195,17 @@ function SatelliteModel({ position }) {
   );
 }
 
-export default function EarthViewer({ latitude, longitude, altitude, orbitPath, noradId, searchQuery = '', selectedNoradId = null }) {
+export default function EarthViewer({ 
+  latitude, 
+  longitude, 
+  altitude, 
+  orbitPath, 
+  noradId, 
+  searchQuery = '', 
+  selectedNoradId = null,
+  activeConjunction = null,
+  onExitConjunction = null
+}) {
   const satellitePos = useMemo(() => {
     if (latitude != null && longitude != null && altitude != null) {
       return latLonAltToVector3(latitude, longitude, altitude);
@@ -205,6 +216,7 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
   // Only show trail when we have real data (>= 2 points)
   const hasTrail = Array.isArray(orbitPath) && orbitPath.length >= 2;
   const isTracking = latitude != null && longitude != null && altitude != null;
+  const isConjunctionMode = activeConjunction !== null;
 
   return (
     <div className="orbital-command-center">
@@ -215,45 +227,89 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
       
       <div className="occ-layout">
         {/* LEFT PANEL: OBJECT TELEMETRY */}
-        <div className="occ-panel left-panel">
-          <h3 className="occ-panel-header">OBJECT TELEMETRY</h3>
-          <div className="occ-telemetry-block">
-            <span className="occ-label">OBJECT:</span>
-            <span className="occ-value">{noradId ? `SAT-${noradId}` : 'UNKNOWN'}</span>
+          <div className="occ-panel left-panel">
+            <h3 className="occ-panel-header">OBJECT TELEMETRY</h3>
+            {activeConjunction ? (
+              <>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">OBJECT:</span>
+                  <span className="occ-value">CONJUNCTION MODE</span>
+                </div>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">PRIMARY:</span>
+                  <span className="occ-value">{`SAT-${activeConjunction?.primary_id || activeConjunction?.primary || activeConjunction?.primarySatellite || "25544"}`}</span>
+                </div>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">SECONDARY:</span>
+                  <span className="occ-value">{`SAT-${activeConjunction?.secondary_id || activeConjunction?.secondary || activeConjunction?.secondarySatellite || "43013"}`}</span>
+                </div>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">STATUS:</span>
+                  <span className="occ-value">SIMULATION ACTIVE</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">OBJECT:</span>
+                    <span className="occ-value">EARTH ORBIT NETWORK</span>
+                </div>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">NORAD:</span>
+                    <span className="occ-value">LIVE CATALOG</span>
+                </div>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">POSITION:</span>
+                  <div className="occ-pos-grid">
+                    <span className="occ-pos-value">LAT: <br/>{isTracking ? Number(latitude).toFixed(4) : '---'}°</span>
+                    <span className="occ-pos-value">LON: <br/>{isTracking ? Number(longitude).toFixed(4) : '---'}°</span>
+                    <span className="occ-pos-value">ALT: <br/>{isTracking ? Number(altitude).toFixed(2) : '---'} KM</span>
+                  </div>
+                </div>
+                <div className="occ-telemetry-block">
+                  <span className="occ-label">STATUS:</span>
+                  <span className={`occ-value occ-status ${isTracking ? 'active' : ''}`}>{isTracking ? 'TARGET ACQUIRED' : 'IDLE'}</span>
+                </div>
+                {isTracking && (
+                  <div className="occ-telemetry-block">
+                    <span className="occ-label">TRACKING:</span>
+                    <span className="occ-value occ-status active">ACTIVE ●</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
-          <div className="occ-telemetry-block">
-            <span className="occ-label">NORAD:</span>
-            <span className="occ-value">{noradId || 'N/A'}</span>
-          </div>
-          <div className="occ-telemetry-block">
-            <span className="occ-label">POSITION:</span>
-            <div className="occ-pos-grid">
-              <span className="occ-pos-value">LAT: <br/>{isTracking ? Number(latitude).toFixed(4) : '---'}°</span>
-              <span className="occ-pos-value">LON: <br/>{isTracking ? Number(longitude).toFixed(4) : '---'}°</span>
-              <span className="occ-pos-value">ALT: <br/>{isTracking ? Number(altitude).toFixed(2) : '---'} KM</span>
-            </div>
-          </div>
-          <div className="occ-telemetry-block">
-            <span className="occ-label">STATUS:</span>
-            <span className={`occ-value occ-status ${isTracking ? 'active' : ''}`}>
-              {isTracking ? 'TARGET ACQUIRED' : 'IDLE'}
-            </span>
-          </div>
-          {isTracking && (
-            <div className="occ-telemetry-block">
-              <span className="occ-label">TRACKING:</span>
-              <span className="occ-value occ-status active">ACTIVE ●</span>
-            </div>
-          )}
-        </div>
 
         {/* CENTER: 3D VIEWER */}
         <div className="occ-viewer-wrapper">
-          <div className="occ-viewer-overlay top-left">FRAME: TEME</div>
+          <div className="occ-viewer-overlay top-left">
+            {isConjunctionMode ? 'MODE: CONJUNCTION SIMULATION' : 'ORBIT SIMULATION'}
+          </div>
           <div className="occ-viewer-overlay top-right">PROPAGATION: SGP4</div>
-          <div className="occ-viewer-overlay bottom-left">REFERENCE: ECI</div>
+          <div className="occ-viewer-overlay bottom-left">
+            {isConjunctionMode ? `WINDOW: ${activeConjunction.prediction_window_hours} HOURS` : 'REFERENCE: ECI'}
+          </div>
           
-          {!isTracking && (
+          {isConjunctionMode && (
+            <button 
+              className="occ-viewer-overlay bottom-right" 
+              onClick={onExitConjunction}
+              style={{
+                background: 'rgba(23, 38, 53, 0.9)',
+                border: '1px solid #C76D32',
+                color: '#C76D32',
+                cursor: 'pointer',
+                fontFamily: 'var(--font-mono)',
+                fontSize: '0.75rem',
+                padding: '0.25rem 0.5rem',
+                textTransform: 'uppercase'
+              }}
+            >
+              EXIT SIMULATION
+            </button>
+          )}
+
+          {!isTracking && !isConjunctionMode && (
             <div className="occ-empty-state">
               <h3 className="occ-empty-title">TRACKING SYSTEM IDLE</h3>
               <p className="occ-empty-subtitle">Awaiting orbital target assignment.</p>
@@ -265,7 +321,14 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
               <ambientLight intensity={0.25} />
               <directionalLight position={[5, 2, 5]} intensity={2} />
               <EarthModel />
-              <SatelliteOrbit searchQuery={searchQuery} selectedNoradId={selectedNoradId} altitude={altitude} />
+              <SatelliteOrbit 
+                searchQuery={searchQuery} 
+                selectedNoradId={selectedNoradId} 
+                altitude={altitude} 
+                mode={isConjunctionMode ? 'conjunction' : 'normal'}
+                activeConjunction={activeConjunction}
+              />
+              <ConjunctionSimulation activeConjunction={activeConjunction} primaryId={"TRACKED OBJECT"} secondaryId={"SECONDARY OBJECT"} />
               <OrbitControls enableZoom />
               <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} />
             </Canvas>
@@ -276,20 +339,20 @@ export default function EarthViewer({ latitude, longitude, altitude, orbitPath, 
         <div className="occ-panel right-panel">
           <h3 className="occ-panel-header">MISSION DATA</h3>
           <div className="occ-telemetry-block">
-            <span className="occ-label">MODEL:</span>
-            <span className="occ-value">SGP4</span>
+              <span className="occ-label">SATELLITE TRACKING:</span>
+              <span className="occ-value">LIVE TRACKING</span>
           </div>
           <div className="occ-telemetry-block">
-            <span className="occ-label">DATA:</span>
-            <span className="occ-value">LIVE TLE</span>
+              <span className="occ-label">ORBIT PREDICTION:</span>
+              <span className="occ-value">SGP4 ACTIVE</span>
           </div>
           <div className="occ-telemetry-block">
-            <span className="occ-label">ORBIT:</span>
-            <span className="occ-value">PREDICTED</span>
+              <span className="occ-label">COLLISION INTELLIGENCE:</span>
+              <span className="occ-value">READY</span>
           </div>
           <div className="occ-telemetry-block">
-            <span className="occ-label">SYSTEM:</span>
-            <span className="occ-value occ-status active">ONLINE ●</span>
+              <span className="occ-label">AI MISSION ANALYST:</span>
+              <span className="occ-value occ-status active">ONLINE</span>
           </div>
         </div>
       </div>

@@ -149,16 +149,20 @@ def analyze_future_conjunction(primary_id: int, secondary_id: int, prediction_ho
     
     start_time = datetime.datetime.now(timezone.utc)
     
-    if prediction_hours <= 24:
+    MAX_PATH_POINTS = 1000
+    total_seconds_window = prediction_hours * 3600
+    required_step_seconds = total_seconds_window // MAX_PATH_POINTS
+    
+    if required_step_seconds < 60:
         step_seconds = 60
-    elif prediction_hours <= 72:
-        step_seconds = 300
     else:
-        step_seconds = 900
+        step_seconds = int(required_step_seconds)
         
+    # Propagate positions for both satellites
     pos_a = _propagate_positions(l1_a, l2_a, start_time, minutes=prediction_hours*60, step_seconds=step_seconds)
     pos_b = _propagate_positions(l1_b, l2_b, start_time, minutes=prediction_hours*60, step_seconds=step_seconds)
     
+    # Build formatted orbit arrays
     orbit_a_formatted = []
     for t, lat, lon, alt in pos_a:
         x, y, z = geodetic_to_ecef(lat, lon, alt)
@@ -169,7 +173,19 @@ def analyze_future_conjunction(primary_id: int, secondary_id: int, prediction_ho
         x, y, z = geodetic_to_ecef(lat, lon, alt)
         orbit_b_formatted.append({"timestamp": t, "x": x, "y": y, "z": z})
         
+    # Find closest approach using the full arrays
     result = find_closest_approach(orbit_a_formatted, orbit_b_formatted)
+    
+    # Enforce maximum path points to avoid huge payloads
+    MAX_PATH_POINTS = 1000
+    def truncate_path(path):
+        if len(path) <= MAX_PATH_POINTS:
+            return path
+        step = max(1, len(path) // MAX_PATH_POINTS)
+        return path[::step][:MAX_PATH_POINTS]
+    
+    orbit_a_formatted = truncate_path(orbit_a_formatted)
+    orbit_b_formatted = truncate_path(orbit_b_formatted)
     
     min_dist = result["minimum_distance_km"]
     closest_time_str = result["closest_time"]
@@ -193,6 +209,22 @@ def analyze_future_conjunction(primary_id: int, secondary_id: int, prediction_ho
     
     end_time = start_time + datetime.timedelta(hours=prediction_hours)
     
+    # Calculate midpoint
+    pos_a_closest = result["position_a"]
+    pos_b_closest = result["position_b"]
+    midpoint = {
+        "x": (pos_a_closest["x"] + pos_b_closest["x"]) / 2,
+        "y": (pos_a_closest["y"] + pos_b_closest["y"]) / 2,
+        "z": (pos_a_closest["z"] + pos_b_closest["z"]) / 2
+    }
+    
+    closest_point = {
+        "time": closest_time_str,
+        "primary_position": pos_a_closest,
+        "secondary_position": pos_b_closest,
+        "midpoint": midpoint
+    }
+    
     return {
         "prediction_window_hours": prediction_hours,
         "analysis_start": start_time.isoformat(),
@@ -201,7 +233,10 @@ def analyze_future_conjunction(primary_id: int, secondary_id: int, prediction_ho
         "time_until_closest_approach": time_until,
         "minimum_distance_km": min_dist,
         "risk_level": risk_level,
-        "recommendation": recommendation
+        "recommendation": recommendation,
+        "primary_orbit_path": orbit_a_formatted,
+        "secondary_orbit_path": orbit_b_formatted,
+        "closest_point": closest_point
     }
 
 

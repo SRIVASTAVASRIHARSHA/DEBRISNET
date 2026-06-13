@@ -40,7 +40,7 @@
 }
 
 /* Analyze button */
-.conjunction-panel .analyze-btn {
+.conjunction-button {
   font-family: var(--font-ui);
   font-size: 0.85rem;
   font-weight: 700;
@@ -55,9 +55,11 @@
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   box-shadow: 0 1px 4px rgba(199, 109, 50, 0.22);
+  display: inline-flex;
+  width: fit-content;
 }
 
-.conjunction-panel .analyze-btn:hover {
+.conjunction-button:hover {
   background: #A85A24;
   border-color: #A85A24;
   box-shadow: 0 3px 10px rgba(199, 109, 50, 0.3);
@@ -81,7 +83,7 @@
 }
 
 /* ── Export Button — Engineering Orange (replaces old blue) ── */
-.export-btn {
+.export-button {
   position: relative;
   z-index: 10;
   pointer-events: auto;
@@ -101,33 +103,34 @@
   cursor: pointer;
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   box-shadow: 0 1px 4px rgba(199, 109, 50, 0.22);
+  width: fit-content;
 }
 
-.export-btn:hover:not(:disabled) {
+.export-button:hover:not(:disabled) {
   background: #A85A24;
   border-color: #A85A24;
   box-shadow: 0 3px 10px rgba(199, 109, 50, 0.32);
   transform: translateY(-1px);
 }
 
-.export-btn:active:not(:disabled) {
+.export-button:active:not(:disabled) {
   transform: translateY(0);
   box-shadow: none;
 }
 
-.export-btn:disabled {
+.export-button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
 }
 
-.export-btn__inner {
+.export-button__inner {
   display: flex;
   align-items: center;
   gap: 0.45rem;
 }
 
 /* Spinner — white on orange (correct on dark bg) */
-.export-spinner {
+.export-button-spinner {
   display: inline-block;
   width: 13px;
   height: 13px;

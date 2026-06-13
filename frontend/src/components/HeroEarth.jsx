@@ -135,7 +135,7 @@ const HeroEarth = () => {
         <div className="strip-divider"></div>
         <div className="strip-item">DATA SOURCE: LIVE TLE</div>
         <div className="strip-divider"></div>
-        <div className="strip-item">REFERENCE FRAME: TEME</div>
+        <div className="strip-item">ORBIT SIMULATION</div>
       </div>
     </div>
   );

@@ -33,6 +33,9 @@ function App() {
   // Full orbit positions array for trail rendering
   const [orbitPath, setOrbitPath] = useState([]);
 
+  // Conjunction state
+  const [activeConjunction, setActiveConjunction] = useState(null);
+
   // Called when user clicks Track in SatelliteExplorer
   const handleSelectSatellite = (satellite) => {
     setTrackedNoradId(String(satellite.norad_id));
@@ -86,10 +89,22 @@ function App() {
       <section id="ai" className="dashboard-section">
         <h2 className="section-title">SYSTEM TELEMETRY</h2>
         <div className="modules-grid">
-          <ModuleCard title="Satellite Tracking" status={moduleStatus.satelliteTracking} />
-          <ModuleCard title="Orbit Prediction" status={moduleStatus.orbitPrediction} />
-          <ModuleCard title="Collision Intelligence" status={moduleStatus.collisionIntelligence} />
-          <ModuleCard title="AI Mission Analyst" status={moduleStatus.aiMissionAnalyst} />
+          <ModuleCard
+            title="Satellite Tracking"
+            status="LIVE TRACKING"
+          />
+          <ModuleCard
+            title="Orbit Prediction"
+            status="SGP4 ACTIVE"
+          />
+          <ModuleCard
+            title="Collision Intelligence"
+            status="READY"
+          />
+          <ModuleCard
+            title="AI Mission Analyst"
+            status="ONLINE"
+          />
         </div>
       </section>
 
@@ -102,6 +117,8 @@ function App() {
           noradId={trackedNoradId}
           searchQuery={searchQuery}
           selectedNoradId={trackedNoradId}
+          activeConjunction={activeConjunction}
+          onExitConjunction={() => setActiveConjunction(null)}
         />
 
       {/* Satellite Explorer – search by name, click Track to predict orbit */}
@@ -123,7 +140,7 @@ function App() {
       </div>
       
       <div id="conjunction">
-        <ConjunctionPanel />
+        <ConjunctionPanel onConjunctionResult={setActiveConjunction} />
       </div>
     </div>
   );

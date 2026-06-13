@@ -119,7 +119,7 @@ const generatePDF = (result, satA, satB, timeReference, localTimeZone) => {
   doc.save(`Conjunction_Forecast_${satA}_${satB}.pdf`);
 };
 
-const ConjunctionPanel = () => {
+const ConjunctionPanel = ({ onConjunctionResult }) => {
   const [satA, setSatA] = useState('');
   const [satB, setSatB] = useState('');
   const [predictionHours, setPredictionHours] = useState('24');
@@ -142,6 +142,8 @@ const ConjunctionPanel = () => {
   ];
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
+const primaryObject = satA;
+const secondaryObject = satB;
 
   // Loading ticker effect
   useEffect(() => {
@@ -193,11 +195,24 @@ const ConjunctionPanel = () => {
     setLoading(true);
     setResult(null);
     try {
-      const data = await analyzeConjunction(satA, satB, hours);
+      const data = await analyzeConjunction(satA, satB, hours, getEffectiveTimeZone());
       if (!data || data.minimum_distance_km == null) {
         setError('No conjunction data returned.');
       } else {
+        // Preserve scroll position before updating result
+        const currentScroll = window.scrollY;
         setResult(data);
+        if (onConjunctionResult) {
+          onConjunctionResult({
+            primarySatellite: satA,
+            secondarySatellite: satB,
+            ...data
+          });
+          // Restore scroll after state updates
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: currentScroll, behavior: "instant" });
+          });
+        }
       }
     } catch (e) {
       setError('Backend unavailable or request failed');
@@ -326,10 +341,10 @@ const ConjunctionPanel = () => {
       </div>
 
       <button
-        className="analyze-btn"
+        className="conjunction-button"
         onClick={handleAnalyze}
         disabled={loading || timeZoneError}
-        style={{ marginTop: '0.5rem', width: '100%', padding: '0.75rem', fontSize: '1rem' }}
+        style={{ marginTop: '0.5rem', padding: '0.75rem', fontSize: '1rem' }}
       >
         {loading ? 'ANALYZING ORBITS...' : 'RUN CONJUNCTION ANALYSIS'}
       </button>
@@ -433,10 +448,8 @@ const ConjunctionPanel = () => {
             <h3 style={{ color: '#C76D32', marginBottom: '0.5rem', fontSize: '1rem', letterSpacing: '0.05em' }}>AUTONOMOUS RECOMMENDATION</h3>
             <p style={{ color: '#172635', fontSize: '1.1rem', margin: 0, fontWeight: '500' }}>{result.recommendation}</p>
           </div>
+          <button className="export-button" onClick={handleExport} style={{marginTop: '1.5rem'}}>EXPORT MISSION REPORT</button>
 
-          <button className="export-btn" onClick={handleExport} style={{marginTop: '2rem', width: '100%'}}>
-            EXPORT MISSION REPORT
-          </button>
         </div>
       )}
     </div>

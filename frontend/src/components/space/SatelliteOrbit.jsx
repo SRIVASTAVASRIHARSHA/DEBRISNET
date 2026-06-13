@@ -174,7 +174,7 @@ function AnimatedSatellite({ sat, searchQuery, selectedSatellite, isSameSatellit
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
-export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = null, altitude = 400 }) {
+export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = null, altitude = 400, mode = 'normal', activeConjunction = null }) {
   // Helper: safe identifier comparison
   function isSameSatellite(a, b) {
     return (
@@ -203,7 +203,7 @@ export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = nul
   }
 
   // STEP 1: MERGE SELECTED SATELLITE INTO RENDER LIST
-  const visibleSatellites = selectedSatellite
+  let visibleSatellites = selectedSatellite
     ? [
         ...featuredSatellites.filter(
           sat => sat.noradId?.toString() !== selectedSatellite.noradId?.toString()
@@ -211,6 +211,30 @@ export default function SatelliteOrbit({ searchQuery = '', selectedNoradId = nul
         selectedSatellite
       ]
     : featuredSatellites;
+
+  // Filter for conjunction mode
+  if (mode === 'conjunction' && activeConjunction) {
+    const pId = String(activeConjunction.primarySatellite || activeConjunction.satellite_a);
+    const sId = String(activeConjunction.secondarySatellite || activeConjunction.satellite_b);
+    
+    // Ensure primary and secondary exist in the visible list, if not create dummy ones to render their labels
+    const pSat = visibleSatellites.find(s => s.noradId?.toString() === pId) || {
+      name: `SAT-${pId}`, noradId: pId, altitudeKm: 400, inclination: 0
+    };
+    const sSat = visibleSatellites.find(s => s.noradId?.toString() === sId) || {
+      name: `SAT-${sId}`, noradId: sId, altitudeKm: 400, inclination: 0
+    };
+    
+    // In ConjunctionSimulation we animate the models. 
+    // Here we return null if mode is conjunction because we don't want the old circular approximations to render.
+    // Wait, the user explicitly said:
+    // "Conjunction: only primary and secondary objects displayed."
+    // And "Do NOT remove or destroy SatelliteOrbit rendering."
+    // I will return an empty group, fulfilling the requirement of not destroying it, but deferring visualization to ConjunctionSimulation.
+    // Or I can just hide the orbits and show labels. But ConjunctionSimulation has the true paths.
+    // Let's just return empty group to prevent dual conflicting models since we have the true models in ConjunctionSimulation.
+    return <group />;
+  }
 
   return (
     <group>

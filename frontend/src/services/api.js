@@ -1,83 +1,67 @@
-const API_BASE_URL = '';
+const API_BASE_URL = "http://localhost:8000";
 
 export const checkHealth = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/health`);
-        if (response.ok) {
-            return 'ONLINE';
-        }
-        return 'OFFLINE';
-    } catch (error) {
-        return 'OFFLINE';
-    }
+  const response = await fetch(`${API_BASE_URL}/health`);
+  return response.json();
 };
 
 export const getSatellites = async () => {
-    try {
-        console.log("Requesting:", `${API_BASE_URL}/api/satellites`);
-        const response = await fetch(`${API_BASE_URL}/api/satellites`);
-        console.log("Status:", response.status);
-        if (!response.ok) throw new Error('Failed to fetch satellites');
-        const data = await response.json();
-        console.log("Received:", data);
-        return data;
-    } catch (error) {
-        console.error("REAL API ERROR:", error);
-        throw error;
-    }
+  const response = await fetch(`${API_BASE_URL}/api/satellites`);
+  return response.json();
 };
 
 export const getOrbitPrediction = async (noradId) => {
-    try {
-        console.log("Requesting:", `${API_BASE_URL}/api/orbit/${noradId}`);
-        const response = await fetch(`${API_BASE_URL}/api/orbit/${noradId}`);
-        console.log("Status:", response.status);
-        if (!response.ok) throw new Error('Orbit prediction failed');
-        const data = await response.json();
-        console.log("Received:", data);
-        return data;
-    } catch (error) {
-        console.error("REAL API ERROR:", error);
-        throw error;
-    }
+  const response = await fetch(`${API_BASE_URL}/api/orbit/${noradId}`);
+  return response.json();
 };
 
-export const analyzeConjunction = async (idA, idB, predictionHours = 24) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/api/conjunction`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                primary_id: Number(idA),
-                secondary_id: Number(idB),
-                prediction_hours: Number(predictionHours)
-            })
-        });
-        if (!response.ok) throw new Error('Conjunction analysis failed');
-        return await response.json();
-    } catch (error) {
-        console.error(error);
-        throw error;
+export const analyzeConjunction = async (primaryId, secondaryId, predictionWindowHours, timezone) => {
+  // Prepare payload matching backend ConjunctionRequest model
+  const payload = {
+    primary_id: Number(primaryId),
+    secondary_id: Number(secondaryId),
+    prediction_hours: Number(predictionWindowHours),
+    timezone: timezone || "UTC",
+  };
+  console.log("Sending conjunction payload:", payload);
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/conjunction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`Conjunction API failed: ${response.status}`);
     }
+    return await response.json();
+  } catch (error) {
+    console.error("Conjunction analysis failed:", error);
+    throw error;
+  }
 };
 
+// Fetch status of all modules (plural) – used by App.jsx
 export const fetchModulesStatus = async () => {
-    const status = await checkHealth();
-    return {
-        satelliteTracking: status,
-        orbitPrediction: status,
-        collisionIntelligence: status,
-        aiMissionAnalyst: status
-    };
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/status`);
+    if (!response.ok) {
+      throw new Error("Status request failed");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Module status fetch failed:", error);
+    throw error;
+  }
 };
+
+// Alias for backward compatibility (singular name)
+export const fetchModuleStatus = fetchModulesStatus;
 
 export default {
-    API_BASE_URL,
-    checkHealth,
-    fetchModulesStatus,
-    getSatellites,
-    getOrbitPrediction,
-    analyzeConjunction
+  checkHealth,
+  getSatellites,
+  getOrbitPrediction,
+  analyzeConjunction,
+  fetchModulesStatus,
+  fetchModuleStatus,
 };
