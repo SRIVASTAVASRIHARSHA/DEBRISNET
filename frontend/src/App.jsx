@@ -9,6 +9,7 @@ import ConjunctionPanel from './components/ConjunctionPanel';
 import api from './services/api';
 import EarthViewer from './components/EarthViewer';
 import SatelliteExplorer from './components/SatelliteExplorer';
+import About from './components/About';
 
 function App() {
   const [moduleStatus, setModuleStatus] = useState({
@@ -142,6 +143,8 @@ function App() {
       <div id="conjunction">
         <ConjunctionPanel onConjunctionResult={setActiveConjunction} />
       </div>
+
+      <About />
     </div>
   );
 }

@@ -36,6 +36,9 @@ const Navbar = () => {
         <button className="nav-link" onClick={() => document.getElementById("reports")?.scrollIntoView({behavior:"smooth"})}>
           REPORTS
         </button>
+        <button className="nav-link" onClick={() => document.getElementById("about")?.scrollIntoView({behavior:"smooth"})}>
+          ABOUT
+        </button>
       </div>
 
       {/* RIGHT — System telemetry */}
